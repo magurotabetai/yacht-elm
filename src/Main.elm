@@ -80,6 +80,5 @@ viewCurrentScreen model =
 subscriptions : GameState -> Sub Msg
 subscriptions _ =
     Sub.batch
-        [ Time.every 1000 Update.Messages.TickTime  -- 1秒ごとに時間更新
-        , onResize Update.Messages.WindowResize  -- ウィンドウサイズ変更検知
+        [ onResize Update.Messages.WindowResize  -- ウィンドウサイズ変更検知
         ]

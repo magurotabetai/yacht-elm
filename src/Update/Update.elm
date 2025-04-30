@@ -398,8 +398,9 @@ handleNodeEntry nodeId run seed =
                             ( InRun, ( Cmd.none, seed ) )
 
                         EventNode eventType ->
-                            -- イベントノード：各種イベント
-                            ( EventPhase, ( Cmd.none, seed ) )
+                            -- イベントノード：各種イベント TODO
+                            -- ( EventPhase, ( Cmd.none, seed ) )
+                            ( InRun, ( Cmd.none, seed ) )
 
                 Nothing ->
                     ( InRun, ( Cmd.none, seed ) )
