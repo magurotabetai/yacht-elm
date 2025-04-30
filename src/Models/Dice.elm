@@ -41,13 +41,13 @@ rollMultipleDice dice =
         consGenerator : Random.Generator a -> Random.Generator (List a) -> Random.Generator (List a)
         consGenerator itemGen listGen =
             Random.map2 (::) itemGen listGen
-            
+
         buildGeneratorList : List Dice -> Random.Generator (List Dice)
         buildGeneratorList diceList =
             case diceList of
-                [] -> 
+                [] ->
                     Random.constant []
-                
+
                 d :: rest ->
                     consGenerator (rollDice d) (buildGeneratorList rest)
     in

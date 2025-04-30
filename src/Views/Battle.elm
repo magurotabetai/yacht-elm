@@ -81,8 +81,8 @@ viewBattleLeft battle =
                 [ text ("残りリロール: " ++ String.fromInt battle.remainingRerolls ++ " / 2") ]
             ]
         , div [ class "action-buttons" ]
-            [ viewButton "reroll" "振り直す" (battle.remainingRerolls > 0) RollDice
-            , viewButton "confirm" "スコア決定" True NoOp
+            [ viewButton "振り直す" RollDice (battle.remainingRerolls <= 0)
+            , viewButton "スコア決定" NoOp False
             ]
         ]
 

@@ -82,25 +82,25 @@ viewMapNode node isCurrent isAvailable =
     let
         nodeTypeClass =
             case node.nodeType of
-                Battle _ ->
+                BattleNode _ ->
                     "node-battle"
 
-                EliteBattle _ ->
+                EliteBattleNode _ ->
                     "node-elite"
 
-                Rest ->
+                RestNode ->
                     "node-rest"
 
-                Merchant ->
+                MerchantNode ->
                     "node-merchant"
 
-                Treasure ->
+                TreasureNode ->
                     "node-treasure"
 
-                Event _ ->
+                EventNode _ ->
                     "node-event"
 
-                Boss _ ->
+                BossNode _ ->
                     "node-boss"
 
         nodeStatusClass =
@@ -115,48 +115,48 @@ viewMapNode node isCurrent isAvailable =
 
         nodeIcon =
             case node.nodeType of
-                Battle _ ->
+                BattleNode _ ->
                     "⚔️"
 
-                EliteBattle _ ->
+                EliteBattleNode _ ->
                     "🔥"
 
-                Rest ->
+                RestNode ->
                     "🏕️"
 
-                Merchant ->
+                MerchantNode ->
                     "💰"
 
-                Treasure ->
+                TreasureNode ->
                     "💎"
 
-                Event _ ->
+                EventNode _ ->
                     "❓"
 
-                Boss _ ->
+                BossNode _ ->
                     "👑"
 
         nodeLabel =
             case node.nodeType of
-                Battle _ ->
+                BattleNode _ ->
                     "戦闘"
 
-                EliteBattle _ ->
+                EliteBattleNode _ ->
                     "エリート"
 
-                Rest ->
+                RestNode ->
                     "休憩"
 
-                Merchant ->
+                MerchantNode ->
                     "商人"
 
-                Treasure ->
+                TreasureNode ->
                     "宝箱"
 
-                Event _ ->
+                EventNode _ ->
                     "イベント"
 
-                Boss _ ->
+                BossNode _ ->
                     "ボス"
 
         position =
