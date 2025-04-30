@@ -5,11 +5,11 @@ import Time
 -- ダイス関連の型定義
 type DiceType
     = Normal
-    | Fire
-    | Ice
-    | Thunder
-    | Cursed
-    | Rare
+    | FireDice
+    | IceDice
+    | ThunderDice
+    | CursedDice
+    | RareDice
 
 type DiceEffect
     = NoEffect
@@ -21,7 +21,7 @@ type DiceEffect
 -- スコア関連の型定義
 type ScoreType
     = Aces
-    | Twos 
+    | Twos
     | Threes
     | Fours
     | Fives
@@ -74,13 +74,13 @@ type UnlockCondition
 
 -- マップ関連の型定義
 type NodeType
-    = Battle EnemyData
-    | EliteBattle EnemyData
-    | Rest
-    | Merchant
-    | Treasure
-    | Event EventType
-    | Boss BossData
+    = BattleNode EnemyData
+    | EliteBattleNode EnemyData
+    | RestNode
+    | MerchantNode
+    | TreasureNode
+    | EventNode EventType
+    | BossNode BossData
 
 -- 敵の基本データ型
 type alias EnemyData =
@@ -144,7 +144,7 @@ type GamePhase
     = MainMenu
     | CharacterSelection
     | InRun
-    | Battle
-    | Event
+    | BattlePhase
+    | EventPhase
     | GameOver
     | Victory

@@ -107,7 +107,7 @@ calculateSmallStraight dice =
             |> List.sort
             |> List.foldr
                 (\x acc ->
-                    if List.isEmpty acc || x /= List.head acc |> Maybe.withDefault 0 then
+                    if List.isEmpty acc || x /= Maybe.withDefault 0 (List.head acc) then
                         x :: acc
                     else
                         acc
@@ -137,7 +137,7 @@ calculateLargeStraight dice =
             |> List.sort
             |> List.foldr
                 (\x acc ->
-                    if List.isEmpty acc || x /= List.head acc |> Maybe.withDefault 0 then
+                    if List.isEmpty acc || x /= Maybe.withDefault 0 (List.head acc) then
                         x :: acc
                     else
                         acc

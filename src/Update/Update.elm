@@ -59,12 +59,12 @@ update msg model =
                         -- ノードに移動
                         updatedMap = moveToNode nodeId run.map
                         updatedRun = { run | map = updatedMap }
-                        
+
                         -- ノードの種類に応じた処理
                         ( nextPhase, cmd ) = handleNodeEntry nodeId updatedRun model.seed
                     in
                     ( { model | currentRun = Just updatedRun, gamePhase = nextPhase, seed = Tuple.second cmd }, Tuple.first cmd )
-                    
+
                 Nothing ->
                     ( model, Cmd.none )
 
@@ -76,7 +76,7 @@ update msg model =
                         updatedRun = { run | map = updatedMap }
                     in
                     ( { model | currentRun = Just updatedRun }, Cmd.none )
-                    
+
                 Nothing ->
                     ( model, Cmd.none )
 
@@ -89,11 +89,11 @@ update msg model =
                             let
                                 ( updatedRun, cmd ) = startBattle enemy boss run
                             in
-                            ( { model | currentRun = Just updatedRun, gamePhase = Battle }, cmd )
-                        
+                            ( { model | currentRun = Just updatedRun, gamePhase = BattlePhase }, cmd )
+
                         Nothing ->
                             ( model, Cmd.none )
-                
+
                 Nothing ->
                     ( model, Cmd.none )
 
@@ -106,23 +106,23 @@ update msg model =
                                 let
                                     generator = rollMultipleDice battle.dice
                                     ( newDice, newSeed ) = Random.step generator model.seed
-                                    
+
                                     updatedBattle =
                                         { battle
                                         | dice = newDice
                                         , remainingRerolls = battle.remainingRerolls - 1
                                         }
-                                    
+
                                     updatedRun =
                                         { run | currentBattle = Just updatedBattle }
                                 in
                                 ( { model | currentRun = Just updatedRun, seed = newSeed }, Cmd.none )
                             else
                                 ( model, Cmd.none )
-                        
+
                         Nothing ->
                             ( model, Cmd.none )
-                
+
                 Nothing ->
                     ( model, Cmd.none )
 
@@ -141,18 +141,18 @@ update msg model =
                                                 else
                                                     dice
                                             )
-                                
+
                                 updatedBattle =
                                     { battle | dice = updatedDice }
-                                
+
                                 updatedRun =
                                     { run | currentBattle = Just updatedBattle }
                             in
                             ( { model | currentRun = Just updatedRun }, Cmd.none )
-                        
+
                         Nothing ->
                             ( model, Cmd.none )
-                
+
                 Nothing ->
                     ( model, Cmd.none )
 
@@ -165,11 +165,11 @@ update msg model =
                                 -- スコアカードに選択されたスコアを設定
                                 updatedScoreCard =
                                     calculatePossibleScores battle.dice battle.scoreCard
-                                
+
                                 -- スコアによるダメージを計算（仮実装）
                                 scoreDamage = 5
-                                
-                                updatedEnemy = 
+
+                                updatedEnemy =
                                     { id = battle.enemy.id
                                     , name = battle.enemy.name
                                     , hp = max 0 (battle.enemy.hp - scoreDamage)
@@ -178,12 +178,12 @@ update msg model =
                                     , scoreBonus = battle.enemy.scoreBonus
                                     , rewards = battle.enemy.rewards
                                     }
-                                
+
                                 -- バトルログを更新
                                 updatedLog =
                                     ("プレイヤーは " ++ String.fromInt scoreDamage ++ " ダメージを与えた！")
                                         :: battle.battleLog
-                                
+
                                 -- 敵のHPがゼロになった場合は勝利
                                 ( gamePhase, finalLog, finalEnemy ) =
                                     if updatedEnemy.hp <= 0 then
@@ -195,16 +195,16 @@ update msg model =
                                         -- 敵の攻撃を処理
                                         let
                                             attackIndex = modBy (List.length battle.enemy.attacks) battle.turn
-                                            attack = 
+                                            attack =
                                                 battle.enemy.attacks
                                                     |> List.drop attackIndex
                                                     |> List.head
                                                     |> Maybe.withDefault { name = "攻撃", damage = 1, description = "" }
-                                            
+
                                             enemyAttackLog = battle.enemy.name ++ "の" ++ attack.name ++ "! " ++ String.fromInt attack.damage ++ "ダメージ！"
                                         in
-                                        ( Battle, enemyAttackLog :: updatedLog, updatedEnemy )
-                                
+                                        ( BattlePhase, enemyAttackLog :: updatedLog, updatedEnemy )
+
                                 -- 戦闘情報を更新
                                 updatedBattle =
                                     { battle
@@ -214,11 +214,11 @@ update msg model =
                                     , remainingRerolls = 2  -- リロール回数をリセット
                                     , battleLog = finalLog
                                     }
-                                
+
                                 updatedRun =
                                     if gamePhase == InRun then
                                         -- 戦闘終了の場合
-                                        { run 
+                                        { run
                                         | currentBattle = Nothing
                                         , battlesWon = run.battlesWon + 1
                                         , gold = run.gold + 10  -- 仮の獲得ゴールド
@@ -228,10 +228,10 @@ update msg model =
                                         { run | currentBattle = Just updatedBattle }
                             in
                             ( { model | currentRun = Just updatedRun, gamePhase = gamePhase }, Cmd.none )
-                        
+
                         Nothing ->
                             ( model, Cmd.none )
-                
+
                 Nothing ->
                     ( model, Cmd.none )
 
@@ -249,16 +249,16 @@ update msg model =
                 Just run ->
                     let
                         updatedRun =
-                            { run 
+                            { run
                             | currentBattle = Nothing
                             , battlesWon = if isVictory then run.battlesWon + 1 else run.battlesWon
                             }
                     in
                     ( { model | currentRun = Just updatedRun, gamePhase = InRun }, Cmd.none )
-                
+
                 Nothing ->
                     ( model, Cmd.none )
-                    
+
         -- その他のメッセージに対する処理
         _ ->
             ( model, Cmd.none )
@@ -269,12 +269,12 @@ getCurrentNodeEnemy run =
     let
         currentFloorLevel = run.map.currentPosition.floorLevel
         currentNodeId = run.map.currentPosition.nodeId
-        
+
         currentFloor =
             run.map.floors
                 |> List.filter (\floor -> floor.level == currentFloorLevel)
                 |> List.head
-                
+
         findNode =
             \nodes ->
                 nodes
@@ -286,21 +286,21 @@ getCurrentNodeEnemy run =
             case findNode floor.nodes of
                 Just node ->
                     case node.nodeType of
-                        Battle enemy ->
+                        BattleNode enemy ->
                             Just ( enemy, Nothing )
-                            
-                        EliteBattle enemy ->
+
+                        EliteBattleNode enemy ->
                             Just ( enemy, Nothing )
-                            
-                        Boss boss ->
+
+                        BossNode boss ->
                             Just ( boss.enemy, Just boss )
-                            
+
                         _ ->
                             Nothing
-                            
+
                 Nothing ->
                     Nothing
-                    
+
         Nothing ->
             Nothing
 
@@ -309,13 +309,13 @@ handleNodeEntry : String -> Run -> Random.Seed -> ( GamePhase, ( Cmd Msg, Random
 handleNodeEntry nodeId run seed =
     let
         currentFloorLevel = run.map.currentPosition.floorLevel
-        
+
         findNode =
             \nodes ->
                 nodes
                     |> List.filter (\node -> node.id == nodeId)
                     |> List.head
-                    
+
         currentFloor =
             run.map.floors
                 |> List.filter (\floor -> floor.level == currentFloorLevel)
@@ -326,33 +326,33 @@ handleNodeEntry nodeId run seed =
             case findNode floor.nodes of
                 Just node ->
                     case node.nodeType of
-                        Battle enemy ->
-                            ( Battle, ( Cmd.none, seed ) )
-                            
-                        EliteBattle enemy ->
-                            ( Battle, ( Cmd.none, seed ) )
-                            
-                        Boss boss ->
-                            ( Battle, ( Cmd.none, seed ) )
-                            
-                        Rest ->
+                        BattleNode enemy ->
+                            ( BattlePhase, ( Cmd.none, seed ) )
+
+                        EliteBattleNode enemy ->
+                            ( BattlePhase, ( Cmd.none, seed ) )
+
+                        BossNode boss ->
+                            ( BattlePhase, ( Cmd.none, seed ) )
+
+                        RestNode ->
                             -- 休憩ポイント：HPを少し回復
                             ( InRun, ( Cmd.none, seed ) )
-                            
-                        Merchant ->
+
+                        MerchantNode ->
                             -- 商人ノード：アイテム購入画面へ
                             ( InRun, ( Cmd.none, seed ) )
-                            
-                        Treasure ->
+
+                        TreasureNode ->
                             -- 宝箱ノード：アイテム獲得
                             ( InRun, ( Cmd.none, seed ) )
-                            
-                        Event eventType ->
+
+                        EventNode eventType ->
                             -- イベントノード：各種イベント
-                            ( Event, ( Cmd.none, seed ) )
-                
+                            ( EventPhase, ( Cmd.none, seed ) )
+
                 Nothing ->
                     ( InRun, ( Cmd.none, seed ) )
-                    
+
         Nothing ->
             ( InRun, ( Cmd.none, seed ) )

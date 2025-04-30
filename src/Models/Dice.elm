@@ -37,9 +37,21 @@ toggleHold dice =
 -- 複数のダイスを振る
 rollMultipleDice : List Dice -> Random.Generator (List Dice)
 rollMultipleDice dice =
-    dice
-        |> List.map rollDice
-        |> Random.combine
+    let
+        consGenerator : Random.Generator a -> Random.Generator (List a) -> Random.Generator (List a)
+        consGenerator itemGen listGen =
+            Random.map2 (::) itemGen listGen
+            
+        buildGeneratorList : List Dice -> Random.Generator (List Dice)
+        buildGeneratorList diceList =
+            case diceList of
+                [] -> 
+                    Random.constant []
+                
+                d :: rest ->
+                    consGenerator (rollDice d) (buildGeneratorList rest)
+    in
+    buildGeneratorList dice
 
 -- 標準的なダイスセットを作成する (5個の通常ダイス)
 standardDiceSet : List Dice

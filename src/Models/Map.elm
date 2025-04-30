@@ -1,28 +1,22 @@
 module Models.Map exposing (..)
 
-import Models.Types exposing (..)
-import Random exposing (Generator)
+import Models.Types exposing (NodeType(..), EnemyData, BossData, AttackData, RewardData, EventType(..), ScoreBonus(..))
+import Random
 
--- マップ全体の構造
+-- マップ全体の型定義
 type alias Map =
     { floors : List Floor
     , currentPosition : NodePosition
     }
 
--- フロア（階層）の構造
+-- フロア（階層）の型定義
 type alias Floor =
     { level : Int
     , nodes : List Node
     , connections : List Connection
     }
 
--- ノードの位置情報
-type alias NodePosition =
-    { floorLevel : Int
-    , nodeId : String
-    }
-
--- ノードの構造
+-- ノードの型定義
 type alias Node =
     { id : String
     , nodeType : NodeType
@@ -30,217 +24,207 @@ type alias Node =
     , visited : Bool
     }
 
--- ノード間の接続情報
+-- 接続情報の型定義
 type alias Connection =
     { from : String
     , to : String
     }
 
--- 2D座標
+-- 位置情報
 type alias Position =
     { x : Float
     , y : Float
     }
 
--- 初期マップを生成
-initMap : Generator Map
-initMap =
+-- 現在位置情報
+type alias NodePosition =
+    { floorLevel : Int
+    , nodeId : String
+    }
+
+-- 初期マップの生成
+initMap : Random.Seed -> ( Map, Random.Seed )
+initMap seed =
     let
-        -- 最初のフロアを生成
-        firstFloor =
-            { level = 1
-            , nodes = 
-                [ { id = "start", nodeType = Rest, position = { x = 0.5, y = 0.1 }, visited = True }
-                , { id = "battle-1", nodeType = Battle (createBasicEnemy "goblin" "ゴブリン"), position = { x = 0.3, y = 0.3 }, visited = False }
-                , { id = "battle-2", nodeType = Battle (createBasicEnemy "wolf" "ウルフ"), position = { x = 0.7, y = 0.3 }, visited = False }
-                , { id = "event-1", nodeType = Event RandomReward, position = { x = 0.2, y = 0.5 }, visited = False }
-                , { id = "merchant", nodeType = Merchant, position = { x = 0.5, y = 0.5 }, visited = False }
-                , { id = "battle-3", nodeType = Battle (createBasicEnemy "orc" "オーク"), position = { x = 0.8, y = 0.5 }, visited = False }
-                , { id = "elite", nodeType = EliteBattle (createEliteEnemy "troll" "トロール"), position = { x = 0.3, y = 0.7 }, visited = False }
-                , { id = "treasure", nodeType = Treasure, position = { x = 0.6, y = 0.7 }, visited = False }
-                , { id = "boss", nodeType = Boss (createBoss "dragon" "ドラゴン"), position = { x = 0.5, y = 0.9 }, visited = False }
-                ]
-            , connections =
-                [ { from = "start", to = "battle-1" }
-                , { from = "start", to = "battle-2" }
-                , { from = "battle-1", to = "event-1" }
-                , { from = "battle-1", to = "merchant" }
-                , { from = "battle-2", to = "merchant" }
-                , { from = "battle-2", to = "battle-3" }
-                , { from = "event-1", to = "elite" }
-                , { from = "merchant", to = "elite" }
-                , { from = "merchant", to = "treasure" }
-                , { from = "battle-3", to = "treasure" }
-                , { from = "elite", to = "boss" }
-                , { from = "treasure", to = "boss" }
-                ]
-            }
-
-        initialMap =
-            { floors = [ firstFloor ]
-            , currentPosition = { floorLevel = 1, nodeId = "start" }
-            }
+        initialFloors = [ createFirstFloor ]
+        initialPosition = { floorLevel = 1, nodeId = "start" }
     in
-    Random.constant initialMap
+    ( { floors = initialFloors
+      , currentPosition = initialPosition
+      }
+    , seed
+    )
 
--- 基本的な敵を作成するヘルパー関数
+-- 最初のフロア（テスト用の固定マップ）
+createFirstFloor : Floor
+createFirstFloor =
+    let
+        nodes =
+            [ { id = "start"
+              , nodeType = BattleNode (createBasicEnemy "rat" "ラット")
+              , position = { x = 0.1, y = 0.5 }
+              , visited = True
+              }
+            , { id = "node1"
+              , nodeType = RestNode
+              , position = { x = 0.3, y = 0.3 }
+              , visited = False
+              }
+            , { id = "node2"
+              , nodeType = BattleNode (createBasicEnemy "slime" "スライム")
+              , position = { x = 0.3, y = 0.7 }
+              , visited = False
+              }
+            , { id = "node3"
+              , nodeType = MerchantNode
+              , position = { x = 0.5, y = 0.2 }
+              , visited = False
+              }
+            , { id = "node4"
+              , nodeType = TreasureNode
+              , position = { x = 0.5, y = 0.5 }
+              , visited = False
+              }
+            , { id = "node5"
+              , nodeType = EliteBattleNode (createEliteEnemy "goblin" "ゴブリン")
+              , position = { x = 0.5, y = 0.8 }
+              , visited = False
+              }
+            , { id = "node6"
+              , nodeType = EventNode RandomReward
+              , position = { x = 0.7, y = 0.4 }
+              , visited = False
+              }
+            , { id = "node7"
+              , nodeType = EventNode MysteryDice
+              , position = { x = 0.7, y = 0.6 }
+              , visited = False
+              }
+            , { id = "boss"
+              , nodeType = BossNode (createBoss "minotaur" "ミノタウロス")
+              , position = { x = 0.9, y = 0.5 }
+              , visited = False
+              }
+            ]
+
+        connections =
+            [ { from = "start", to = "node1" }
+            , { from = "start", to = "node2" }
+            , { from = "node1", to = "node3" }
+            , { from = "node1", to = "node4" }
+            , { from = "node2", to = "node4" }
+            , { from = "node2", to = "node5" }
+            , { from = "node3", to = "node6" }
+            , { from = "node4", to = "node6" }
+            , { from = "node4", to = "node7" }
+            , { from = "node5", to = "node7" }
+            , { from = "node6", to = "boss" }
+            , { from = "node7", to = "boss" }
+            ]
+    in
+    { level = 1
+    , nodes = nodes
+    , connections = connections
+    }
+
+-- 基本的な敵の生成
 createBasicEnemy : String -> String -> EnemyData
 createBasicEnemy id name =
     { id = id
     , name = name
     , hp = 10
     , maxHp = 10
-    , attacks = 
-        [ { name = "通常攻撃", damage = 2, description = "基本的な攻撃" }
+    , attacks =
+        [ { name = "通常攻撃", damage = 1, description = "弱い攻撃" }
+        , { name = "威嚇", damage = 0, description = "何も起こらない" }
         ]
-    , scoreBonus = []
-    , rewards = 
-        [ { gold = 5
-          , experience = 10
-          , items = []
-          }
-        ]
+    , scoreBonus = [ BonusType Models.Types.Choice 2 ]
+    , rewards = [ { gold = 5, experience = 10, items = [] } ]
     }
 
--- エリート敵を作成するヘルパー関数
+-- エリート敵の生成
 createEliteEnemy : String -> String -> EnemyData
 createEliteEnemy id name =
     { id = id
-    , name = name
+    , name = name ++ " (エリート)"
     , hp = 20
     , maxHp = 20
-    , attacks = 
-        [ { name = "強力な一撃", damage = 4, description = "通常より強力な攻撃" }
-        , { name = "連続攻撃", damage = 2, description = "2回連続で攻撃" }
+    , attacks =
+        [ { name = "強打", damage = 2, description = "強い攻撃" }
+        , { name = "連撃", damage = 1, description = "2回攻撃する" }
+        , { name = "特殊能力", damage = 3, description = "強力な特殊攻撃" }
         ]
-    , scoreBonus = 
-        [ BonusType FourOfKind 5 
-        ]
-    , rewards = 
-        [ { gold = 15
-          , experience = 30
-          , items = [ "random_common" ]
-          }
-        ]
+    , scoreBonus = [ BonusType Models.Types.FourOfKind 5, PenaltyType Models.Types.Yacht 10 ]
+    , rewards = [ { gold = 15, experience = 25, items = [ "common_item" ] } ]
     }
 
--- ボスを作成するヘルパー関数
+-- ボスの生成
 createBoss : String -> String -> BossData
 createBoss id name =
-    { enemy = 
+    { enemy =
         { id = id
-        , name = name
-        , hp = 50
-        , maxHp = 50
-        , attacks = 
-            [ { name = "火炎ブレス", damage = 6, description = "広範囲に及ぶ強力な攻撃" }
-            , { name = "鋭い爪", damage = 3, description = "素早い連続攻撃" }
-            , { name = "尻尾薙ぎ払い", damage = 4, description = "広範囲に中程度のダメージ" }
+        , name = name ++ " (ボス)"
+        , hp = 40
+        , maxHp = 40
+        , attacks =
+            [ { name = "激突", damage = 3, description = "強力な一撃" }
+            , { name = "暴走", damage = 2, description = "連続攻撃" }
+            , { name = "怒りの咆哮", damage = 4, description = "強力な範囲攻撃" }
+            , { name = "地響き", damage = 1, description = "全体に弱いダメージ" }
             ]
-        , scoreBonus = 
-            [ BonusType Yacht 10
-            , BonusType LargeStraight 5
-            ]
-        , rewards = 
-            [ { gold = 50
-              , experience = 100
-              , items = [ "rare_item", "next_floor_key" ]
-              }
-            ]
+        , scoreBonus = [ BonusType Models.Types.LargeStraight 10 ]
+        , rewards = [ { gold = 50, experience = 100, items = [ "rare_item" ] } ]
         }
-    , specialPhases = 
-        [ { hpThreshold = 25
-          , description = "ドラゴンが怒りに震え、炎が激しく燃え上がる！"
-          , effect = DoubleAttack
+    , specialPhases =
+        [ { hpThreshold = 20
+          , description = "ボスが怒り状態になった！"
+          , effect = Models.Types.DoubleAttack
           }
         ]
     }
 
--- 次に進むことができるノードを取得
-getAvailableNodes : Map -> List Node
-getAvailableNodes map =
-    let
-        currentFloorLevel = map.currentPosition.floorLevel
-        currentNodeId = map.currentPosition.nodeId
-        
-        currentFloor = 
-            map.floors
-                |> List.filter (\floor -> floor.level == currentFloorLevel)
-                |> List.head
-                |> Maybe.withDefault { level = 0, nodes = [], connections = [] }
-                
-        connectedNodeIds =
-            currentFloor.connections
-                |> List.filter (\conn -> conn.from == currentNodeId)
-                |> List.map .to
-                
-        connectedNodes =
-            currentFloor.nodes
-                |> List.filter (\node -> List.member node.id connectedNodeIds && not node.visited)
-    in
-    connectedNodes
-
--- ノードに移動
+-- マップでの移動処理
 moveToNode : String -> Map -> Map
 moveToNode nodeId map =
     let
         currentFloorLevel = map.currentPosition.floorLevel
-        
-        updatedFloors =
-            map.floors
-                |> List.map 
-                    (\floor -> 
-                        if floor.level == currentFloorLevel then
-                            { floor | 
-                                nodes = 
-                                    floor.nodes
-                                        |> List.map 
-                                            (\node -> 
-                                                if node.id == nodeId then
-                                                    { node | visited = True }
-                                                else
-                                                    node
-                                            )
-                            }
-                        else
-                            floor
-                    )
-    in
-    { map 
-    | floors = updatedFloors
-    , currentPosition = { floorLevel = currentFloorLevel, nodeId = nodeId }
-    }
 
--- 次のフロアにマップを拡張
-addNextFloor : Map -> Generator Map
-addNextFloor map =
+        updateNode node =
+            if node.id == nodeId then
+                { node | visited = True }
+            else
+                node
+
+        updateFloor floor =
+            if floor.level == currentFloorLevel then
+                { floor | nodes = List.map updateNode floor.nodes }
+            else
+                floor
+
+        updatedFloors = List.map updateFloor map.floors
+        updatedPosition = { floorLevel = currentFloorLevel, nodeId = nodeId }
+    in
+    { map | floors = updatedFloors, currentPosition = updatedPosition }
+
+-- 利用可能なノードの取得
+getAvailableNodes : Map -> List Node
+getAvailableNodes map =
     let
-        nextLevel = 
-            map.floors
-                |> List.map .level
-                |> List.maximum
-                |> Maybe.withDefault 0
-                |> (+) 1
-                
-        -- 次のフロアのノード数を決定
-        nodeCount = nextLevel * 3 + 5
-    in
-    Random.map
-        (\nextFloor ->
-            { map | floors = map.floors ++ [ nextFloor ] }
-        )
-        (generateFloor nextLevel nodeCount)
+        currentPosition = map.currentPosition
 
--- ランダムなフロアを生成するジェネレータ
-generateFloor : Int -> Int -> Generator Floor
-generateFloor level nodeCount =
-    -- この関数はランダムなマップ生成アルゴリズムを実装する
-    -- 簡潔にするため、現時点では固定パターンを返す
-    Random.constant
-        { level = level
-        , nodes = 
-            [ { id = "start-" ++ String.fromInt level, nodeType = Rest, position = { x = 0.5, y = 0.1 }, visited = True }
-            , { id = "boss-" ++ String.fromInt level, nodeType = Boss (createBoss ("boss-" ++ String.fromInt level) ("レベル" ++ String.fromInt level ++ "ボス")), position = { x = 0.5, y = 0.9 }, visited = False }
-            ]
-        , connections = []
-        }
+        getConnectedNodeIds floorLevel nodeId =
+            map.floors
+                |> List.filter (\floor -> floor.level == floorLevel)
+                |> List.concatMap .connections
+                |> List.filter (\conn -> conn.from == nodeId)
+                |> List.map .to
+
+        connectedIds = getConnectedNodeIds currentPosition.floorLevel currentPosition.nodeId
+
+        getNodes floorLevel =
+            map.floors
+                |> List.filter (\floor -> floor.level == floorLevel)
+                |> List.concatMap .nodes
+                |> List.filter (\node -> List.member node.id connectedIds && not node.visited)
+    in
+    getNodes currentPosition.floorLevel

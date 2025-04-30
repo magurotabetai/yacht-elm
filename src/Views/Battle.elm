@@ -33,16 +33,16 @@ viewEnemyInfo : EnemyData -> Maybe BossData -> Html Msg
 viewEnemyInfo enemy boss =
     div [ class "enemy-info" ]
         [ div [ class "enemy-header" ]
-            [ h2 [] 
+            [ h2 []
                 [ text enemy.name
-                , if boss /= Nothing then viewBadge "boss" "ボス" else text "" 
+                , if boss /= Nothing then viewBadge "boss" "ボス" else text ""
                 ]
             ]
         , div [ class "health-bar" ]
-            [ div 
+            [ div
                 [ class "health-fill"
                 , style "width" (String.fromFloat (toFloat enemy.hp / toFloat enemy.maxHp * 100) ++ "%")
-                ] 
+                ]
                 []
             ]
         , div [ class "health-text" ]
@@ -89,7 +89,7 @@ viewBattleLeft battle =
 -- ダイス表示
 viewDice : { id : String, value : Int, held : Bool, diceType : a, effects : b } -> Html Msg
 viewDice dice =
-    div 
+    div
         [ class ("dice dice-normal" ++ if dice.held then " dice-held" else "")
         , onClick (ToggleHoldDice dice.id)
         ]
