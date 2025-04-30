@@ -194,8 +194,16 @@ startBattle enemy boss run =
             , battleLog = [ enemy.name ++ "が現れた！" ]
             }
 
+        -- ダイスロールのジェネレーターを作成
+        diceRollGenerator = Models.Dice.rollMultipleDice initialBattle.dice
+        -- 乱数シードを使ってダイスを振る
+        (rolledDice, newSeed) = Random.step diceRollGenerator (Random.initialSeed run.seed)
+
+        -- 振ったダイスで初期バトル状態を更新
+        battleWithRolledDice = { initialBattle | dice = rolledDice }
+
         updatedRun =
-            { run | currentBattle = Just initialBattle }
+            { run | currentBattle = Just battleWithRolledDice }
     in
     ( updatedRun, Cmd.none )
 

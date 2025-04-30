@@ -6642,6 +6642,11 @@ var $author$project$Models$Dice$standardDiceSet = A2(
 				[$author$project$Models$Types$NoEffect]));
 	},
 	A2($elm$core$List$range, 1, 5));
+var $elm$random$Random$step = F2(
+	function (_v0, seed) {
+		var generator = _v0.a;
+		return generator(seed);
+	});
 var $author$project$Models$Game$startBattle = F3(
 	function (enemy, boss, run) {
 		var rerollCount = 2;
@@ -6657,10 +6662,20 @@ var $author$project$Models$Game$startBattle = F3(
 			scoreCard: $author$project$Models$Score$initScoreCard,
 			turn: 1
 		};
+		var diceRollGenerator = $author$project$Models$Dice$rollMultipleDice(initialBattle.dice);
+		var _v0 = A2(
+			$elm$random$Random$step,
+			diceRollGenerator,
+			$elm$random$Random$initialSeed(run.seed));
+		var rolledDice = _v0.a;
+		var newSeed = _v0.b;
+		var battleWithRolledDice = _Utils_update(
+			initialBattle,
+			{dice: rolledDice});
 		var updatedRun = _Utils_update(
 			run,
 			{
-				currentBattle: $elm$core$Maybe$Just(initialBattle)
+				currentBattle: $elm$core$Maybe$Just(battleWithRolledDice)
 			});
 		return _Utils_Tuple2(updatedRun, $elm$core$Platform$Cmd$none);
 	});
@@ -6867,11 +6882,6 @@ var $author$project$Models$Map$initMap = function (seed) {
 		{currentPosition: initialPosition, floors: initialFloors},
 		seed);
 };
-var $elm$random$Random$step = F2(
-	function (_v0, seed) {
-		var generator = _v0.a;
-		return generator(seed);
-	});
 var $author$project$Models$Game$startNewRun = F2(
 	function (character, gameState) {
 		var updatedPlayer = {
