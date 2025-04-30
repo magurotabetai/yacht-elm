@@ -5,6 +5,6 @@ import { Elm } from './Main.elm';
 const rootEl = document.querySelector('#root');
 if (rootEl) {
   Elm.Main.init({
-    node: rootEl
+    node: rootEl,
   });
 }
