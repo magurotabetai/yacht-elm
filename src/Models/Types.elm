@@ -34,6 +34,23 @@ type ScoreType
     | Yacht
     | Special String
 
+-- スコア履歴管理のための型定義
+type alias ScoreHistory =
+    { aces : Bool
+    , twos : Bool
+    , threes : Bool
+    , fours : Bool
+    , fives : Bool
+    , sixes : Bool
+    , choice : Bool
+    , fourOfKind : Bool
+    , fullHouse : Bool
+    , smallStraight : Bool
+    , largeStraight : Bool
+    , yacht : Bool
+    , specialScores : List String -- 使用済み特殊スコアのID
+    }
+
 -- アイテム関連の型定義
 type Rarity
     = Common

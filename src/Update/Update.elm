@@ -5,7 +5,7 @@ import Models.Character exposing (Character)
 import Models.Dice exposing (rollMultipleDice, toggleHold)
 import Models.Game exposing (GameState, Run, Battle, initGameState, startNewRun, startBattle)
 import Models.Map exposing (moveToNode, getAvailableNodes)
-import Models.Score exposing (calculatePossibleScores, ScoreCard)
+import Models.Score exposing (markScoreUsed, isScoreAvailable, calculateScore)
 import Models.Score.DamageCalculator exposing (calculateDamageFromScore)
 import Models.Types exposing (GamePhase(..), NodeType(..), ScoreType(..), EnemyData, BossData, AttackData)
 import Random
@@ -108,14 +108,10 @@ update msg model =
                                     generator = rollMultipleDice battle.dice
                                     ( newDice, newSeed ) = Random.step generator model.seed
 
-                                    -- リロール後に可能なスコアを再計算
-                                    updatedScoreCard = calculatePossibleScores newDice battle.scoreCard
-
                                     updatedBattle =
                                         { battle
                                         | dice = newDice
                                         , remainingRerolls = battle.remainingRerolls - 1
-                                        , scoreCard = updatedScoreCard
                                         }
 
                                     updatedRun =
@@ -166,15 +162,19 @@ update msg model =
                 Just run ->
                     case run.currentBattle of
                         Just battle ->
-                            let
-                                -- スコアを選択するだけで確定はしない
-                                updatedBattle =
-                                    { battle | selectedScoreType = Just scoreType }
+                            -- スコアが使用可能なときだけ選択できる
+                            if isScoreAvailable scoreType battle.scoreHistory then
+                                let
+                                    -- スコアを選択するだけで確定はしない
+                                    updatedBattle =
+                                        { battle | selectedScoreType = Just scoreType }
 
-                                updatedRun =
-                                    { run | currentBattle = Just updatedBattle }
-                            in
-                            ( { model | currentRun = Just updatedRun }, Cmd.none )
+                                    updatedRun =
+                                        { run | currentBattle = Just updatedBattle }
+                                in
+                                ( { model | currentRun = Just updatedRun }, Cmd.none )
+                            else
+                                ( model, Cmd.none )
 
                         Nothing ->
                             ( model, Cmd.none )
@@ -213,74 +213,79 @@ update msg model =
                         Just battle ->
                             case battle.selectedScoreType of
                                 Just scoreType ->
-                                    let
-                                        -- スコアカードに選択されたスコアを設定
-                                        updatedScoreCard =
-                                            calculatePossibleScores battle.dice battle.scoreCard
+                                    -- スコアが使用可能なときだけ確定できる
+                                    if isScoreAvailable scoreType battle.scoreHistory then
+                                        let
+                                            -- スコア履歴を更新（使用済みに設定）
+                                            updatedScoreHistory =
+                                                markScoreUsed scoreType battle.scoreHistory
 
-                                        -- 選択したスコアタイプに基づいてダメージを計算
-                                        scoreDamage = calculateDamageFromScore scoreType battle.dice
+                                            -- 選択したスコアタイプに基づいてダメージを計算
+                                            scoreDamage = calculateDamageFromScore scoreType battle.dice
 
-                                        updatedEnemy =
-                                            { id = battle.enemy.id
-                                            , name = battle.enemy.name
-                                            , hp = max 0 (battle.enemy.hp - scoreDamage)
-                                            , maxHp = battle.enemy.maxHp
-                                            , attacks = battle.enemy.attacks
-                                            , scoreBonus = battle.enemy.scoreBonus
-                                            , rewards = battle.enemy.rewards
-                                            }
-
-                                        -- バトルログを更新
-                                        updatedLog =
-                                            ("プレイヤーは " ++ String.fromInt scoreDamage ++ " ダメージを与えた！")
-                                                :: battle.battleLog
-
-                                        -- 敵のHPがゼロになった場合は勝利
-                                        ( gamePhase, finalLog, finalEnemy ) =
-                                            if updatedEnemy.hp <= 0 then
-                                                ( InRun
-                                                , "敵を倒した！勝利！" :: updatedLog
-                                                , { updatedEnemy | hp = 0 }
-                                                )
-                                            else
-                                                -- 敵の攻撃を処理
-                                                let
-                                                    attackIndex = modBy (List.length battle.enemy.attacks) battle.turn
-                                                    attack =
-                                                        battle.enemy.attacks
-                                                            |> List.drop attackIndex
-                                                            |> List.head
-                                                            |> Maybe.withDefault { name = "攻撃", damage = 1, description = "" }
-
-                                                    enemyAttackLog = battle.enemy.name ++ "の" ++ attack.name ++ "! " ++ String.fromInt attack.damage ++ "ダメージ！"
-                                                in
-                                                ( BattlePhase, enemyAttackLog :: updatedLog, updatedEnemy )
-
-                                        -- 戦闘情報を更新
-                                        updatedBattle =
-                                            { battle
-                                            | scoreCard = updatedScoreCard
-                                            , enemy = finalEnemy
-                                            , turn = battle.turn + 1
-                                            , remainingRerolls = 2  -- リロール回数をリセット
-                                            , battleLog = finalLog
-                                            , selectedScoreType = Nothing  -- 選択状態をリセット
-                                            }
-
-                                        updatedRun =
-                                            if gamePhase == InRun then
-                                                -- 戦闘終了の場合
-                                                { run
-                                                | currentBattle = Nothing
-                                                , battlesWon = run.battlesWon + 1
-                                                , gold = run.gold + 10  -- 仮の獲得ゴールド
+                                            updatedEnemy =
+                                                { id = battle.enemy.id
+                                                , name = battle.enemy.name
+                                                , hp = max 0 (battle.enemy.hp - scoreDamage)
+                                                , maxHp = battle.enemy.maxHp
+                                                , attacks = battle.enemy.attacks
+                                                , scoreBonus = battle.enemy.scoreBonus
+                                                , rewards = battle.enemy.rewards
                                                 }
-                                            else
-                                                -- 戦闘継続
-                                                { run | currentBattle = Just updatedBattle }
-                                    in
-                                    ( { model | currentRun = Just updatedRun, gamePhase = gamePhase }, Cmd.none )
+
+                                            -- バトルログを更新
+                                            updatedLog =
+                                                ("プレイヤーは " ++ String.fromInt scoreDamage ++ " ダメージを与えた！")
+                                                    :: battle.battleLog
+
+                                            -- 敵のHPがゼロになった場合は勝利
+                                            ( gamePhase, finalLog, finalEnemy ) =
+                                                if updatedEnemy.hp <= 0 then
+                                                    ( InRun
+                                                    , "敵を倒した！勝利！" :: updatedLog
+                                                    , { updatedEnemy | hp = 0 }
+                                                    )
+                                                else
+                                                    -- 敵の攻撃を処理
+                                                    let
+                                                        attackIndex = modBy (List.length battle.enemy.attacks) battle.turn
+                                                        attack =
+                                                            battle.enemy.attacks
+                                                                |> List.drop attackIndex
+                                                                |> List.head
+                                                                |> Maybe.withDefault { name = "攻撃", damage = 1, description = "" }
+
+                                                        enemyAttackLog = battle.enemy.name ++ "の" ++ attack.name ++ "! " ++ String.fromInt attack.damage ++ "ダメージ！"
+                                                    in
+                                                    ( BattlePhase, enemyAttackLog :: updatedLog, updatedEnemy )
+
+                                            -- 戦闘情報を更新
+                                            updatedBattle =
+                                                { battle
+                                                | scoreHistory = updatedScoreHistory
+                                                , enemy = finalEnemy
+                                                , turn = battle.turn + 1
+                                                , remainingRerolls = 2  -- リロール回数をリセット
+                                                , battleLog = finalLog
+                                                , selectedScoreType = Nothing  -- 選択状態をリセット
+                                                }
+
+                                            updatedRun =
+                                                if gamePhase == InRun then
+                                                    -- 戦闘終了の場合
+                                                    { run
+                                                    | currentBattle = Nothing
+                                                    , battlesWon = run.battlesWon + 1
+                                                    , gold = run.gold + 10  -- 仮の獲得ゴールド
+                                                    }
+                                                else
+                                                    -- 戦闘継続
+                                                    { run | currentBattle = Just updatedBattle }
+                                        in
+                                        ( { model | currentRun = Just updatedRun, gamePhase = gamePhase }, Cmd.none )
+                                    else
+                                        -- すでに使用済みのスコアは選択できない
+                                        ( model, Cmd.none )
 
                                 Nothing ->
                                     -- スコアが選択されていない場合は何もしない

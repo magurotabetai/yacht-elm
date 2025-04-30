@@ -6381,37 +6381,6 @@ var $author$project$Models$Score$DamageCalculator$calculateDamageFromScore = F2(
 			scoreValue * $author$project$Models$Score$DamageCalculator$getScoreMultiplier(scoreType));
 		return A2($elm$core$Basics$max, 1, finalDamage);
 	});
-var $author$project$Models$Score$calculatePossibleScores = F2(
-	function (dice, scoreCard) {
-		return _Utils_update(
-			scoreCard,
-			{
-				aces: _Utils_eq(scoreCard.aces, $elm$core$Maybe$Nothing) ? $elm$core$Maybe$Just(
-					A2($author$project$Models$Score$sumOfFace, 1, dice)) : scoreCard.aces,
-				choice: _Utils_eq(scoreCard.choice, $elm$core$Maybe$Nothing) ? $elm$core$Maybe$Just(
-					$author$project$Models$Score$sumAllDice(dice)) : scoreCard.choice,
-				fives: _Utils_eq(scoreCard.fives, $elm$core$Maybe$Nothing) ? $elm$core$Maybe$Just(
-					A2($author$project$Models$Score$sumOfFace, 5, dice)) : scoreCard.fives,
-				fourOfKind: _Utils_eq(scoreCard.fourOfKind, $elm$core$Maybe$Nothing) ? $elm$core$Maybe$Just(
-					$author$project$Models$Score$calculateFourOfKind(dice)) : scoreCard.fourOfKind,
-				fours: _Utils_eq(scoreCard.fours, $elm$core$Maybe$Nothing) ? $elm$core$Maybe$Just(
-					A2($author$project$Models$Score$sumOfFace, 4, dice)) : scoreCard.fours,
-				fullHouse: _Utils_eq(scoreCard.fullHouse, $elm$core$Maybe$Nothing) ? $elm$core$Maybe$Just(
-					$author$project$Models$Score$calculateFullHouse(dice)) : scoreCard.fullHouse,
-				largeStraight: _Utils_eq(scoreCard.largeStraight, $elm$core$Maybe$Nothing) ? $elm$core$Maybe$Just(
-					$author$project$Models$Score$calculateLargeStraight(dice)) : scoreCard.largeStraight,
-				sixes: _Utils_eq(scoreCard.sixes, $elm$core$Maybe$Nothing) ? $elm$core$Maybe$Just(
-					A2($author$project$Models$Score$sumOfFace, 6, dice)) : scoreCard.sixes,
-				smallStraight: _Utils_eq(scoreCard.smallStraight, $elm$core$Maybe$Nothing) ? $elm$core$Maybe$Just(
-					$author$project$Models$Score$calculateSmallStraight(dice)) : scoreCard.smallStraight,
-				threes: _Utils_eq(scoreCard.threes, $elm$core$Maybe$Nothing) ? $elm$core$Maybe$Just(
-					A2($author$project$Models$Score$sumOfFace, 3, dice)) : scoreCard.threes,
-				twos: _Utils_eq(scoreCard.twos, $elm$core$Maybe$Nothing) ? $elm$core$Maybe$Just(
-					A2($author$project$Models$Score$sumOfFace, 2, dice)) : scoreCard.twos,
-				yacht: _Utils_eq(scoreCard.yacht, $elm$core$Maybe$Nothing) ? $elm$core$Maybe$Just(
-					$author$project$Models$Score$calculateYacht(dice)) : scoreCard.yacht
-			});
-	});
 var $elm$core$List$drop = F2(
 	function (n, list) {
 		drop:
@@ -6578,6 +6547,98 @@ var $author$project$Update$Update$handleNodeEntry = F3(
 				_Utils_Tuple2($elm$core$Platform$Cmd$none, seed));
 		}
 	});
+var $author$project$Models$Score$isScoreAvailable = F2(
+	function (scoreType, history) {
+		switch (scoreType.$) {
+			case 'Aces':
+				return !history.aces;
+			case 'Twos':
+				return !history.twos;
+			case 'Threes':
+				return !history.threes;
+			case 'Fours':
+				return !history.fours;
+			case 'Fives':
+				return !history.fives;
+			case 'Sixes':
+				return !history.sixes;
+			case 'Choice':
+				return !history.choice;
+			case 'FourOfKind':
+				return !history.fourOfKind;
+			case 'FullHouse':
+				return !history.fullHouse;
+			case 'SmallStraight':
+				return !history.smallStraight;
+			case 'LargeStraight':
+				return !history.largeStraight;
+			case 'Yacht':
+				return !history.yacht;
+			default:
+				var id = scoreType.a;
+				return !A2($elm$core$List$member, id, history.specialScores);
+		}
+	});
+var $author$project$Models$Score$markScoreUsed = F2(
+	function (scoreType, history) {
+		switch (scoreType.$) {
+			case 'Aces':
+				return _Utils_update(
+					history,
+					{aces: true});
+			case 'Twos':
+				return _Utils_update(
+					history,
+					{twos: true});
+			case 'Threes':
+				return _Utils_update(
+					history,
+					{threes: true});
+			case 'Fours':
+				return _Utils_update(
+					history,
+					{fours: true});
+			case 'Fives':
+				return _Utils_update(
+					history,
+					{fives: true});
+			case 'Sixes':
+				return _Utils_update(
+					history,
+					{sixes: true});
+			case 'Choice':
+				return _Utils_update(
+					history,
+					{choice: true});
+			case 'FourOfKind':
+				return _Utils_update(
+					history,
+					{fourOfKind: true});
+			case 'FullHouse':
+				return _Utils_update(
+					history,
+					{fullHouse: true});
+			case 'SmallStraight':
+				return _Utils_update(
+					history,
+					{smallStraight: true});
+			case 'LargeStraight':
+				return _Utils_update(
+					history,
+					{largeStraight: true});
+			case 'Yacht':
+				return _Utils_update(
+					history,
+					{yacht: true});
+			default:
+				var id = scoreType.a;
+				return _Utils_update(
+					history,
+					{
+						specialScores: A2($elm$core$List$cons, id, history.specialScores)
+					});
+		}
+	});
 var $elm$core$Basics$modBy = _Basics_modBy;
 var $author$project$Models$Map$moveToNode = F2(
 	function (nodeId, map) {
@@ -6718,7 +6779,7 @@ var $elm$core$Tuple$second = function (_v0) {
 	var y = _v0.b;
 	return y;
 };
-var $author$project$Models$Score$initScoreCard = {aces: $elm$core$Maybe$Nothing, choice: $elm$core$Maybe$Nothing, fives: $elm$core$Maybe$Nothing, fourOfKind: $elm$core$Maybe$Nothing, fours: $elm$core$Maybe$Nothing, fullHouse: $elm$core$Maybe$Nothing, largeStraight: $elm$core$Maybe$Nothing, sixes: $elm$core$Maybe$Nothing, smallStraight: $elm$core$Maybe$Nothing, specialScores: _List_Nil, threes: $elm$core$Maybe$Nothing, twos: $elm$core$Maybe$Nothing, yacht: $elm$core$Maybe$Nothing};
+var $author$project$Models$Score$initScoreHistory = {aces: false, choice: false, fives: false, fourOfKind: false, fours: false, fullHouse: false, largeStraight: false, sixes: false, smallStraight: false, specialScores: _List_Nil, threes: false, twos: false, yacht: false};
 var $author$project$Models$Types$NoEffect = {$: 'NoEffect'};
 var $author$project$Models$Types$Normal = {$: 'Normal'};
 var $author$project$Models$Dice$initDice = F3(
@@ -6753,7 +6814,7 @@ var $author$project$Models$Game$startBattle = F3(
 			enemyDamageDealt: 0,
 			playerDamageDealt: 0,
 			remainingRerolls: rerollCount,
-			scoreCard: $author$project$Models$Score$initScoreCard,
+			scoreHistory: $author$project$Models$Score$initScoreHistory,
 			selectedScoreType: $elm$core$Maybe$Nothing,
 			turn: 1
 		};
@@ -6766,10 +6827,7 @@ var $author$project$Models$Game$startBattle = F3(
 		var newSeed = _v0.b;
 		var battleWithRolledDice = _Utils_update(
 			initialBattle,
-			{
-				dice: rolledDice,
-				scoreCard: A2($author$project$Models$Score$calculatePossibleScores, rolledDice, initialBattle.scoreCard)
-			});
+			{dice: rolledDice});
 		var updatedRun = _Utils_update(
 			run,
 			{
@@ -7131,10 +7189,9 @@ var $author$project$Update$Update$update = F2(
 							var _v10 = A2($elm$random$Random$step, generator, model.seed);
 							var newDice = _v10.a;
 							var newSeed = _v10.b;
-							var updatedScoreCard = A2($author$project$Models$Score$calculatePossibleScores, newDice, battle.scoreCard);
 							var updatedBattle = _Utils_update(
 								battle,
-								{dice: newDice, remainingRerolls: battle.remainingRerolls - 1, scoreCard: updatedScoreCard});
+								{dice: newDice, remainingRerolls: battle.remainingRerolls - 1});
 							var updatedRun = _Utils_update(
 								run,
 								{
@@ -7200,23 +7257,27 @@ var $author$project$Update$Update$update = F2(
 					var _v14 = run.currentBattle;
 					if (_v14.$ === 'Just') {
 						var battle = _v14.a;
-						var updatedBattle = _Utils_update(
-							battle,
-							{
-								selectedScoreType: $elm$core$Maybe$Just(scoreType)
-							});
-						var updatedRun = _Utils_update(
-							run,
-							{
-								currentBattle: $elm$core$Maybe$Just(updatedBattle)
-							});
-						return _Utils_Tuple2(
-							_Utils_update(
-								model,
+						if (A2($author$project$Models$Score$isScoreAvailable, scoreType, battle.scoreHistory)) {
+							var updatedBattle = _Utils_update(
+								battle,
 								{
-									currentRun: $elm$core$Maybe$Just(updatedRun)
-								}),
-							$elm$core$Platform$Cmd$none);
+									selectedScoreType: $elm$core$Maybe$Just(scoreType)
+								});
+							var updatedRun = _Utils_update(
+								run,
+								{
+									currentBattle: $elm$core$Maybe$Just(updatedBattle)
+								});
+							return _Utils_Tuple2(
+								_Utils_update(
+									model,
+									{
+										currentRun: $elm$core$Maybe$Just(updatedRun)
+									}),
+								$elm$core$Platform$Cmd$none);
+						} else {
+							return _Utils_Tuple2(model, $elm$core$Platform$Cmd$none);
+						}
 					} else {
 						return _Utils_Tuple2(model, $elm$core$Platform$Cmd$none);
 					}
@@ -7260,67 +7321,71 @@ var $author$project$Update$Update$update = F2(
 						var _v18 = battle.selectedScoreType;
 						if (_v18.$ === 'Just') {
 							var scoreType = _v18.a;
-							var updatedScoreCard = A2($author$project$Models$Score$calculatePossibleScores, battle.dice, battle.scoreCard);
-							var scoreDamage = A2($author$project$Models$Score$DamageCalculator$calculateDamageFromScore, scoreType, battle.dice);
-							var updatedEnemy = {
-								attacks: battle.enemy.attacks,
-								hp: A2($elm$core$Basics$max, 0, battle.enemy.hp - scoreDamage),
-								id: battle.enemy.id,
-								maxHp: battle.enemy.maxHp,
-								name: battle.enemy.name,
-								rewards: battle.enemy.rewards,
-								scoreBonus: battle.enemy.scoreBonus
-							};
-							var updatedLog = A2(
-								$elm$core$List$cons,
-								'プレイヤーは ' + ($elm$core$String$fromInt(scoreDamage) + ' ダメージを与えた！'),
-								battle.battleLog);
-							var _v19 = function () {
-								if (updatedEnemy.hp <= 0) {
-									return _Utils_Tuple3(
-										$author$project$Models$Types$InRun,
-										A2($elm$core$List$cons, '敵を倒した！勝利！', updatedLog),
-										_Utils_update(
-											updatedEnemy,
-											{hp: 0}));
-								} else {
-									var attackIndex = A2(
-										$elm$core$Basics$modBy,
-										$elm$core$List$length(battle.enemy.attacks),
-										battle.turn);
-									var attack = A2(
-										$elm$core$Maybe$withDefault,
-										{damage: 1, description: '', name: '攻撃'},
-										$elm$core$List$head(
-											A2($elm$core$List$drop, attackIndex, battle.enemy.attacks)));
-									var enemyAttackLog = battle.enemy.name + ('の' + (attack.name + ('! ' + ($elm$core$String$fromInt(attack.damage) + 'ダメージ！'))));
-									return _Utils_Tuple3(
-										$author$project$Models$Types$BattlePhase,
-										A2($elm$core$List$cons, enemyAttackLog, updatedLog),
-										updatedEnemy);
-								}
-							}();
-							var gamePhase = _v19.a;
-							var finalLog = _v19.b;
-							var finalEnemy = _v19.c;
-							var updatedBattle = _Utils_update(
-								battle,
-								{battleLog: finalLog, enemy: finalEnemy, remainingRerolls: 2, scoreCard: updatedScoreCard, selectedScoreType: $elm$core$Maybe$Nothing, turn: battle.turn + 1});
-							var updatedRun = _Utils_eq(gamePhase, $author$project$Models$Types$InRun) ? _Utils_update(
-								run,
-								{battlesWon: run.battlesWon + 1, currentBattle: $elm$core$Maybe$Nothing, gold: run.gold + 10}) : _Utils_update(
-								run,
-								{
-									currentBattle: $elm$core$Maybe$Just(updatedBattle)
-								});
-							return _Utils_Tuple2(
-								_Utils_update(
-									model,
+							if (A2($author$project$Models$Score$isScoreAvailable, scoreType, battle.scoreHistory)) {
+								var updatedScoreHistory = A2($author$project$Models$Score$markScoreUsed, scoreType, battle.scoreHistory);
+								var scoreDamage = A2($author$project$Models$Score$DamageCalculator$calculateDamageFromScore, scoreType, battle.dice);
+								var updatedEnemy = {
+									attacks: battle.enemy.attacks,
+									hp: A2($elm$core$Basics$max, 0, battle.enemy.hp - scoreDamage),
+									id: battle.enemy.id,
+									maxHp: battle.enemy.maxHp,
+									name: battle.enemy.name,
+									rewards: battle.enemy.rewards,
+									scoreBonus: battle.enemy.scoreBonus
+								};
+								var updatedLog = A2(
+									$elm$core$List$cons,
+									'プレイヤーは ' + ($elm$core$String$fromInt(scoreDamage) + ' ダメージを与えた！'),
+									battle.battleLog);
+								var _v19 = function () {
+									if (updatedEnemy.hp <= 0) {
+										return _Utils_Tuple3(
+											$author$project$Models$Types$InRun,
+											A2($elm$core$List$cons, '敵を倒した！勝利！', updatedLog),
+											_Utils_update(
+												updatedEnemy,
+												{hp: 0}));
+									} else {
+										var attackIndex = A2(
+											$elm$core$Basics$modBy,
+											$elm$core$List$length(battle.enemy.attacks),
+											battle.turn);
+										var attack = A2(
+											$elm$core$Maybe$withDefault,
+											{damage: 1, description: '', name: '攻撃'},
+											$elm$core$List$head(
+												A2($elm$core$List$drop, attackIndex, battle.enemy.attacks)));
+										var enemyAttackLog = battle.enemy.name + ('の' + (attack.name + ('! ' + ($elm$core$String$fromInt(attack.damage) + 'ダメージ！'))));
+										return _Utils_Tuple3(
+											$author$project$Models$Types$BattlePhase,
+											A2($elm$core$List$cons, enemyAttackLog, updatedLog),
+											updatedEnemy);
+									}
+								}();
+								var gamePhase = _v19.a;
+								var finalLog = _v19.b;
+								var finalEnemy = _v19.c;
+								var updatedBattle = _Utils_update(
+									battle,
+									{battleLog: finalLog, enemy: finalEnemy, remainingRerolls: 2, scoreHistory: updatedScoreHistory, selectedScoreType: $elm$core$Maybe$Nothing, turn: battle.turn + 1});
+								var updatedRun = _Utils_eq(gamePhase, $author$project$Models$Types$InRun) ? _Utils_update(
+									run,
+									{battlesWon: run.battlesWon + 1, currentBattle: $elm$core$Maybe$Nothing, gold: run.gold + 10}) : _Utils_update(
+									run,
 									{
-										currentRun: $elm$core$Maybe$Just(updatedRun),
-										gamePhase: gamePhase
-									}),
-								$elm$core$Platform$Cmd$none);
+										currentBattle: $elm$core$Maybe$Just(updatedBattle)
+									});
+								return _Utils_Tuple2(
+									_Utils_update(
+										model,
+										{
+											currentRun: $elm$core$Maybe$Just(updatedRun),
+											gamePhase: gamePhase
+										}),
+									$elm$core$Platform$Cmd$none);
+							} else {
+								return _Utils_Tuple2(model, $elm$core$Platform$Cmd$none);
+							}
 						} else {
 							return _Utils_Tuple2(model, $elm$core$Platform$Cmd$none);
 						}
@@ -7831,16 +7896,17 @@ var $author$project$Models$Score$DamageCalculator$formatMultiplier = function (s
 };
 var $author$project$Views$Battle$viewScoreRow = F4(
 	function (battle, label, value, scoreType) {
+		var isAvailable = A2($author$project$Models$Score$isScoreAvailable, scoreType, battle.scoreHistory);
+		var rowClass = 'score-row' + ((_Utils_eq(
+			battle.selectedScoreType,
+			$elm$core$Maybe$Just(scoreType)) ? ' selected-score' : '') + ((!isAvailable) ? ' used-score' : ''));
 		return A2(
 			$elm$html$Html$div,
 			_List_fromArray(
 				[
-					$elm$html$Html$Attributes$class(
-					'score-row' + (_Utils_eq(
-						battle.selectedScoreType,
-						$elm$core$Maybe$Just(scoreType)) ? ' selected-score' : '')),
-					$elm$html$Html$Events$onClick(
-					$author$project$Update$Messages$SelectScore(scoreType))
+					$elm$html$Html$Attributes$class(rowClass),
+					isAvailable ? $elm$html$Html$Events$onClick(
+					$author$project$Update$Messages$SelectScore(scoreType)) : $elm$html$Html$Attributes$class('')
 				]),
 			_List_fromArray(
 				[
@@ -7877,6 +7943,42 @@ var $author$project$Views$Battle$viewScoreRow = F4(
 						]))
 				]));
 	});
+var $author$project$Models$Score$calculateScore = F2(
+	function (scoreType, dice) {
+		switch (scoreType.$) {
+			case 'Aces':
+				return A2($author$project$Models$Score$sumOfFace, 1, dice);
+			case 'Twos':
+				return A2($author$project$Models$Score$sumOfFace, 2, dice);
+			case 'Threes':
+				return A2($author$project$Models$Score$sumOfFace, 3, dice);
+			case 'Fours':
+				return A2($author$project$Models$Score$sumOfFace, 4, dice);
+			case 'Fives':
+				return A2($author$project$Models$Score$sumOfFace, 5, dice);
+			case 'Sixes':
+				return A2($author$project$Models$Score$sumOfFace, 6, dice);
+			case 'Choice':
+				return $author$project$Models$Score$sumAllDice(dice);
+			case 'FourOfKind':
+				return $author$project$Models$Score$calculateFourOfKind(dice);
+			case 'FullHouse':
+				return $author$project$Models$Score$calculateFullHouse(dice);
+			case 'SmallStraight':
+				return $author$project$Models$Score$calculateSmallStraight(dice);
+			case 'LargeStraight':
+				return $author$project$Models$Score$calculateLargeStraight(dice);
+			case 'Yacht':
+				return $author$project$Models$Score$calculateYacht(dice);
+			default:
+				return 0;
+		}
+	});
+var $author$project$Views$Battle$viewScoreValue = F2(
+	function (battle, scoreType) {
+		return A2($author$project$Models$Score$isScoreAvailable, scoreType, battle.scoreHistory) ? $elm$core$String$fromInt(
+			A2($author$project$Models$Score$calculateScore, scoreType, battle.dice)) : '✓';
+	});
 var $author$project$Views$Battle$viewScoreCard = function (battle) {
 	return A2(
 		$elm$html$Html$div,
@@ -7905,55 +8007,37 @@ var $author$project$Views$Battle$viewScoreCard = function (battle) {
 						$author$project$Views$Battle$viewScoreRow,
 						battle,
 						'エース (1)',
-						A2(
-							$elm$core$Maybe$withDefault,
-							'-',
-							A2($elm$core$Maybe$map, $elm$core$String$fromInt, battle.scoreCard.aces)),
+						A2($author$project$Views$Battle$viewScoreValue, battle, $author$project$Models$Types$Aces),
 						$author$project$Models$Types$Aces),
 						A4(
 						$author$project$Views$Battle$viewScoreRow,
 						battle,
 						'デュース (2)',
-						A2(
-							$elm$core$Maybe$withDefault,
-							'-',
-							A2($elm$core$Maybe$map, $elm$core$String$fromInt, battle.scoreCard.twos)),
+						A2($author$project$Views$Battle$viewScoreValue, battle, $author$project$Models$Types$Twos),
 						$author$project$Models$Types$Twos),
 						A4(
 						$author$project$Views$Battle$viewScoreRow,
 						battle,
 						'トリプル (3)',
-						A2(
-							$elm$core$Maybe$withDefault,
-							'-',
-							A2($elm$core$Maybe$map, $elm$core$String$fromInt, battle.scoreCard.threes)),
+						A2($author$project$Views$Battle$viewScoreValue, battle, $author$project$Models$Types$Threes),
 						$author$project$Models$Types$Threes),
 						A4(
 						$author$project$Views$Battle$viewScoreRow,
 						battle,
 						'フォー (4)',
-						A2(
-							$elm$core$Maybe$withDefault,
-							'-',
-							A2($elm$core$Maybe$map, $elm$core$String$fromInt, battle.scoreCard.fours)),
+						A2($author$project$Views$Battle$viewScoreValue, battle, $author$project$Models$Types$Fours),
 						$author$project$Models$Types$Fours),
 						A4(
 						$author$project$Views$Battle$viewScoreRow,
 						battle,
 						'フィフス (5)',
-						A2(
-							$elm$core$Maybe$withDefault,
-							'-',
-							A2($elm$core$Maybe$map, $elm$core$String$fromInt, battle.scoreCard.fives)),
+						A2($author$project$Views$Battle$viewScoreValue, battle, $author$project$Models$Types$Fives),
 						$author$project$Models$Types$Fives),
 						A4(
 						$author$project$Views$Battle$viewScoreRow,
 						battle,
 						'シックス (6)',
-						A2(
-							$elm$core$Maybe$withDefault,
-							'-',
-							A2($elm$core$Maybe$map, $elm$core$String$fromInt, battle.scoreCard.sixes)),
+						A2($author$project$Views$Battle$viewScoreValue, battle, $author$project$Models$Types$Sixes),
 						$author$project$Models$Types$Sixes)
 					])),
 				A2(
@@ -7975,55 +8059,37 @@ var $author$project$Views$Battle$viewScoreCard = function (battle) {
 						$author$project$Views$Battle$viewScoreRow,
 						battle,
 						'チョイス',
-						A2(
-							$elm$core$Maybe$withDefault,
-							'-',
-							A2($elm$core$Maybe$map, $elm$core$String$fromInt, battle.scoreCard.choice)),
+						A2($author$project$Views$Battle$viewScoreValue, battle, $author$project$Models$Types$Choice),
 						$author$project$Models$Types$Choice),
 						A4(
 						$author$project$Views$Battle$viewScoreRow,
 						battle,
 						'フォーカインド',
-						A2(
-							$elm$core$Maybe$withDefault,
-							'-',
-							A2($elm$core$Maybe$map, $elm$core$String$fromInt, battle.scoreCard.fourOfKind)),
+						A2($author$project$Views$Battle$viewScoreValue, battle, $author$project$Models$Types$FourOfKind),
 						$author$project$Models$Types$FourOfKind),
 						A4(
 						$author$project$Views$Battle$viewScoreRow,
 						battle,
 						'フルハウス',
-						A2(
-							$elm$core$Maybe$withDefault,
-							'-',
-							A2($elm$core$Maybe$map, $elm$core$String$fromInt, battle.scoreCard.fullHouse)),
+						A2($author$project$Views$Battle$viewScoreValue, battle, $author$project$Models$Types$FullHouse),
 						$author$project$Models$Types$FullHouse),
 						A4(
 						$author$project$Views$Battle$viewScoreRow,
 						battle,
 						'Sストレート',
-						A2(
-							$elm$core$Maybe$withDefault,
-							'-',
-							A2($elm$core$Maybe$map, $elm$core$String$fromInt, battle.scoreCard.smallStraight)),
+						A2($author$project$Views$Battle$viewScoreValue, battle, $author$project$Models$Types$SmallStraight),
 						$author$project$Models$Types$SmallStraight),
 						A4(
 						$author$project$Views$Battle$viewScoreRow,
 						battle,
 						'Lストレート',
-						A2(
-							$elm$core$Maybe$withDefault,
-							'-',
-							A2($elm$core$Maybe$map, $elm$core$String$fromInt, battle.scoreCard.largeStraight)),
+						A2($author$project$Views$Battle$viewScoreValue, battle, $author$project$Models$Types$LargeStraight),
 						$author$project$Models$Types$LargeStraight),
 						A4(
 						$author$project$Views$Battle$viewScoreRow,
 						battle,
 						'ヨット',
-						A2(
-							$elm$core$Maybe$withDefault,
-							'-',
-							A2($elm$core$Maybe$map, $elm$core$String$fromInt, battle.scoreCard.yacht)),
+						A2($author$project$Views$Battle$viewScoreValue, battle, $author$project$Models$Types$Yacht),
 						$author$project$Models$Types$Yacht)
 					]))
 			]));

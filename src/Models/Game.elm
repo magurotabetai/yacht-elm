@@ -3,7 +3,7 @@ module Models.Game exposing (..)
 import Models.Character exposing (Character, Item, availableCharacters)
 import Models.Dice exposing (Dice, standardDiceSet)
 import Models.Map exposing (Map)
-import Models.Score exposing (ScoreCard, initScoreCard)
+import Models.Score exposing (ScoreCard, initScoreCard, initScoreHistory)
 import Models.Types exposing (..)
 import Random
 import Time
@@ -56,7 +56,7 @@ type alias Battle =
     , turn : Int
     , dice : List Dice
     , remainingRerolls : Int
-    , scoreCard : ScoreCard
+    , scoreHistory : ScoreHistory  -- scoreCardの代わりにscoreHistoryを使用
     , selectedScoreType : Maybe ScoreType  -- 選択されているがまだ確定していないスコアタイプ
     , playerDamageDealt : Int
     , enemyDamageDealt : Int
@@ -189,7 +189,7 @@ startBattle enemy boss run =
             , turn = 1
             , dice = standardDiceSet
             , remainingRerolls = rerollCount
-            , scoreCard = initScoreCard
+            , scoreHistory = initScoreHistory  -- scoreCardからscoreHistoryに変更
             , selectedScoreType = Nothing
             , playerDamageDealt = 0
             , enemyDamageDealt = 0
@@ -203,10 +203,7 @@ startBattle enemy boss run =
 
         -- 振ったダイスで初期バトル状態を更新
         battleWithRolledDice =
-            { initialBattle
-            | dice = rolledDice
-            , scoreCard = Models.Score.calculatePossibleScores rolledDice initialBattle.scoreCard
-            }
+            { initialBattle | dice = rolledDice }  -- scoreCardの計算は不要になったため削除
 
         updatedRun =
             { run | currentBattle = Just battleWithRolledDice }
