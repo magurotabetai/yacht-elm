@@ -213,6 +213,88 @@ type ItemEffect
     | DamageBonus Int
 ```
 
+#### 1.4 キャラクターモデル
+```elm
+type alias Character =
+    { id : String
+    , name : String
+    , description : String
+    , portrait : String
+    , startingHP : Int
+    , maxHP : Int
+    , specialAbility : CharacterAbility
+    , startingItems : List Item
+    , unlockCondition : Maybe UnlockCondition
+    }
+
+type CharacterAbility
+    = ExtraReroll -- 1回多くリロールができる
+    | LuckyStart Int -- 指定された数字のダイスが1つ確定で出る
+    | ScoreBonus ScoreType Int -- 特定の役のスコアがアップ
+    | GoldBonus Int -- ゴールド獲得量増加
+    | HealthRegen Int -- 戦闘後に体力回復
+    | TreasureHunter -- 宝箱からのアイテム数増加
+    | MerchantDiscount Int -- 商人の値引き率
+
+type UnlockCondition
+    = StarterCharacter -- 最初から使用可能
+    | DefeatBoss String -- 特定のボスを倒す
+    | CompleteRunWith String -- 特定のキャラクターでクリア
+    | AchieveScore Int -- 特定のスコア到達
+    | FindSecretItem String -- 特定のアイテムを発見
+```
+
+#### 1.5 初期キャラクター
+```elm
+-- 初期キャラクター1: ラッキーローラー
+luckyRoller : Character
+luckyRoller =
+    { id = "lucky_roller"
+    , name = "ラッキーローラー"
+    , description = "元ギャンブラーで運に恵まれた冒険者。追加のリロールチャンスを持ち、幸運な一投で勝負を決める。"
+    , portrait = "assets/characters/lucky_roller.png"
+    , startingHP = 20
+    , maxHP = 20
+    , specialAbility = ExtraReroll
+    , startingItems =
+        [ { id = "lucky_coin"
+          , name = "幸運のコイン"
+          , description = "毎ターン、一度だけ1つのダイスを任意の目に変えられる"
+          , rarity = Common
+          , itemType = Active { cooldown = 3, currentCooldown = 0 }
+          , effects = [ ModifyDiceValue 0 ]
+          , cost = 0
+          , unlocked = True
+          }
+        ]
+    , unlockCondition = Just StarterCharacter
+    }
+
+-- 初期キャラクター2: ストラテジスト
+strategist : Character
+strategist =
+    { id = "strategist"
+    , name = "ストラテジスト"
+    , description = "計算高い戦術家。ストレートの役でボーナス点を獲得し、長期的な戦略が得意。"
+    , portrait = "assets/characters/strategist.png"
+    , startingHP = 18
+    , maxHP = 18
+    , specialAbility = ScoreBonus SmallStraight 5
+    , startingItems =
+        [ { id = "tactical_manual"
+          , name = "戦術マニュアル"
+          , description = "毎バトル開始時に、一度だけ全てのダイスを振り直せる"
+          , rarity = Common
+          , itemType = Passive
+          , effects = [ AddReroll 1 ]
+          , cost = 0
+          , unlocked = True
+          }
+        ]
+    , unlockCondition = Just StarterCharacter
+    }
+```
+
 ### 2. マップと遭遇データ
 
 #### 2.1 マップ生成アルゴリズム
