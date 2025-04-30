@@ -6029,153 +6029,6 @@ var $author$project$Main$subscriptions = function (_v0) {
 var $author$project$Models$Types$BattlePhase = {$: 'BattlePhase'};
 var $author$project$Models$Types$CharacterSelection = {$: 'CharacterSelection'};
 var $author$project$Models$Types$InRun = {$: 'InRun'};
-var $elm$core$Maybe$andThen = F2(
-	function (callback, maybeValue) {
-		if (maybeValue.$ === 'Just') {
-			var value = maybeValue.a;
-			return callback(value);
-		} else {
-			return $elm$core$Maybe$Nothing;
-		}
-	});
-var $elm$core$List$filter = F2(
-	function (isGood, list) {
-		return A3(
-			$elm$core$List$foldr,
-			F2(
-				function (x, xs) {
-					return isGood(x) ? A2($elm$core$List$cons, x, xs) : xs;
-				}),
-			_List_Nil,
-			list);
-	});
-var $elm$core$List$head = function (list) {
-	if (list.b) {
-		var x = list.a;
-		var xs = list.b;
-		return $elm$core$Maybe$Just(x);
-	} else {
-		return $elm$core$Maybe$Nothing;
-	}
-};
-var $elm$core$Maybe$map = F2(
-	function (f, maybe) {
-		if (maybe.$ === 'Just') {
-			var value = maybe.a;
-			return $elm$core$Maybe$Just(
-				f(value));
-		} else {
-			return $elm$core$Maybe$Nothing;
-		}
-	});
-var $author$project$Models$Types$Aces = {$: 'Aces'};
-var $author$project$Models$Types$Choice = {$: 'Choice'};
-var $author$project$Models$Types$Fives = {$: 'Fives'};
-var $author$project$Models$Types$FourOfKind = {$: 'FourOfKind'};
-var $author$project$Models$Types$Fours = {$: 'Fours'};
-var $author$project$Models$Types$FullHouse = {$: 'FullHouse'};
-var $author$project$Models$Types$LargeStraight = {$: 'LargeStraight'};
-var $author$project$Models$Types$Sixes = {$: 'Sixes'};
-var $author$project$Models$Types$Threes = {$: 'Threes'};
-var $author$project$Models$Types$Twos = {$: 'Twos'};
-var $author$project$Models$Types$Yacht = {$: 'Yacht'};
-var $author$project$Models$Score$DamageCalculator$scoreMultipliers = _List_fromArray(
-	[
-		{description: '基本ダメージ', multiplier: 1.0, scoreType: $author$project$Models$Types$Aces},
-		{description: '基本ダメージ', multiplier: 1.0, scoreType: $author$project$Models$Types$Twos},
-		{description: '基本ダメージ', multiplier: 1.0, scoreType: $author$project$Models$Types$Threes},
-		{description: '基本ダメージ', multiplier: 1.0, scoreType: $author$project$Models$Types$Fours},
-		{description: '基本ダメージ', multiplier: 1.0, scoreType: $author$project$Models$Types$Fives},
-		{description: '基本ダメージ', multiplier: 1.0, scoreType: $author$project$Models$Types$Sixes},
-		{description: '基本ダメージ', multiplier: 1.0, scoreType: $author$project$Models$Types$Choice},
-		{description: '中程度ボーナス', multiplier: 1.4, scoreType: $author$project$Models$Types$FourOfKind},
-		{description: '大きめボーナス', multiplier: 1.6, scoreType: $author$project$Models$Types$FullHouse},
-		{description: '小ボーナス', multiplier: 1.2, scoreType: $author$project$Models$Types$SmallStraight},
-		{description: '大きなボーナス', multiplier: 1.8, scoreType: $author$project$Models$Types$LargeStraight},
-		{description: '最大ボーナス', multiplier: 2.0, scoreType: $author$project$Models$Types$Yacht}
-	]);
-var $elm$core$Maybe$withDefault = F2(
-	function (_default, maybe) {
-		if (maybe.$ === 'Just') {
-			var value = maybe.a;
-			return value;
-		} else {
-			return _default;
-		}
-	});
-var $author$project$Models$Score$DamageCalculator$getScoreMultiplier = function (scoreType) {
-	if (scoreType.$ === 'Special') {
-		return 1.0;
-	} else {
-		return A2(
-			$elm$core$Maybe$withDefault,
-			1.0,
-			A2(
-				$elm$core$Maybe$map,
-				function ($) {
-					return $.multiplier;
-				},
-				$elm$core$List$head(
-					A2(
-						$elm$core$List$filter,
-						function (m) {
-							return _Utils_eq(m.scoreType, scoreType);
-						},
-						$author$project$Models$Score$DamageCalculator$scoreMultipliers))));
-	}
-};
-var $elm$core$Basics$round = _Basics_round;
-var $author$project$Models$Score$DamageCalculator$calculateDamageFromScore = F2(
-	function (scoreType, scoreCard) {
-		var scoreValue = function () {
-			switch (scoreType.$) {
-				case 'Aces':
-					return A2($elm$core$Maybe$withDefault, 0, scoreCard.aces);
-				case 'Twos':
-					return A2($elm$core$Maybe$withDefault, 0, scoreCard.twos);
-				case 'Threes':
-					return A2($elm$core$Maybe$withDefault, 0, scoreCard.threes);
-				case 'Fours':
-					return A2($elm$core$Maybe$withDefault, 0, scoreCard.fours);
-				case 'Fives':
-					return A2($elm$core$Maybe$withDefault, 0, scoreCard.fives);
-				case 'Sixes':
-					return A2($elm$core$Maybe$withDefault, 0, scoreCard.sixes);
-				case 'Choice':
-					return A2($elm$core$Maybe$withDefault, 0, scoreCard.choice);
-				case 'FourOfKind':
-					return A2($elm$core$Maybe$withDefault, 0, scoreCard.fourOfKind);
-				case 'FullHouse':
-					return A2($elm$core$Maybe$withDefault, 0, scoreCard.fullHouse);
-				case 'SmallStraight':
-					return A2($elm$core$Maybe$withDefault, 0, scoreCard.smallStraight);
-				case 'LargeStraight':
-					return A2($elm$core$Maybe$withDefault, 0, scoreCard.largeStraight);
-				case 'Yacht':
-					return A2($elm$core$Maybe$withDefault, 0, scoreCard.yacht);
-				default:
-					var name = scoreType.a;
-					return A2(
-						$elm$core$Maybe$withDefault,
-						0,
-						A2(
-							$elm$core$Maybe$andThen,
-							function ($) {
-								return $.value;
-							},
-							$elm$core$List$head(
-								A2(
-									$elm$core$List$filter,
-									function (s) {
-										return _Utils_eq(s.scoreType, name);
-									},
-									scoreCard.specialScores))));
-			}
-		}();
-		var finalDamage = $elm$core$Basics$round(
-			scoreValue * $author$project$Models$Score$DamageCalculator$getScoreMultiplier(scoreType));
-		return A2($elm$core$Basics$max, 1, finalDamage);
-	});
 var $elm$core$List$any = F2(
 	function (isOkay, list) {
 		any:
@@ -6274,6 +6127,15 @@ var $author$project$Models$Score$calculateFullHouse = function (dice) {
 		valueCounts);
 	return (has3OfKind && has2OfKind) ? 25 : 0;
 };
+var $elm$core$List$head = function (list) {
+	if (list.b) {
+		var x = list.a;
+		var xs = list.b;
+		return $elm$core$Maybe$Just(x);
+	} else {
+		return $elm$core$Maybe$Nothing;
+	}
+};
 var $elm$core$List$isEmpty = function (xs) {
 	if (!xs.b) {
 		return true;
@@ -6286,6 +6148,15 @@ var $elm$core$List$sortBy = _List_sortBy;
 var $elm$core$List$sort = function (xs) {
 	return A2($elm$core$List$sortBy, $elm$core$Basics$identity, xs);
 };
+var $elm$core$Maybe$withDefault = F2(
+	function (_default, maybe) {
+		if (maybe.$ === 'Just') {
+			var value = maybe.a;
+			return value;
+		} else {
+			return _default;
+		}
+	});
 var $author$project$Models$Score$calculateLargeStraight = function (dice) {
 	var sortedValues = $elm$core$List$reverse(
 		A3(
@@ -6390,6 +6261,75 @@ var $author$project$Models$Score$calculateYacht = function (dice) {
 		},
 		valueCounts) ? 50 : 0;
 };
+var $elm$core$List$filter = F2(
+	function (isGood, list) {
+		return A3(
+			$elm$core$List$foldr,
+			F2(
+				function (x, xs) {
+					return isGood(x) ? A2($elm$core$List$cons, x, xs) : xs;
+				}),
+			_List_Nil,
+			list);
+	});
+var $elm$core$Maybe$map = F2(
+	function (f, maybe) {
+		if (maybe.$ === 'Just') {
+			var value = maybe.a;
+			return $elm$core$Maybe$Just(
+				f(value));
+		} else {
+			return $elm$core$Maybe$Nothing;
+		}
+	});
+var $author$project$Models$Types$Aces = {$: 'Aces'};
+var $author$project$Models$Types$Choice = {$: 'Choice'};
+var $author$project$Models$Types$Fives = {$: 'Fives'};
+var $author$project$Models$Types$FourOfKind = {$: 'FourOfKind'};
+var $author$project$Models$Types$Fours = {$: 'Fours'};
+var $author$project$Models$Types$FullHouse = {$: 'FullHouse'};
+var $author$project$Models$Types$LargeStraight = {$: 'LargeStraight'};
+var $author$project$Models$Types$Sixes = {$: 'Sixes'};
+var $author$project$Models$Types$Threes = {$: 'Threes'};
+var $author$project$Models$Types$Twos = {$: 'Twos'};
+var $author$project$Models$Types$Yacht = {$: 'Yacht'};
+var $author$project$Models$Score$DamageCalculator$scoreMultipliers = _List_fromArray(
+	[
+		{description: '基本ダメージ', multiplier: 1.0, scoreType: $author$project$Models$Types$Aces},
+		{description: '基本ダメージ', multiplier: 1.0, scoreType: $author$project$Models$Types$Twos},
+		{description: '基本ダメージ', multiplier: 1.0, scoreType: $author$project$Models$Types$Threes},
+		{description: '基本ダメージ', multiplier: 1.0, scoreType: $author$project$Models$Types$Fours},
+		{description: '基本ダメージ', multiplier: 1.0, scoreType: $author$project$Models$Types$Fives},
+		{description: '基本ダメージ', multiplier: 1.0, scoreType: $author$project$Models$Types$Sixes},
+		{description: '基本ダメージ', multiplier: 1.0, scoreType: $author$project$Models$Types$Choice},
+		{description: '中程度ボーナス', multiplier: 1.4, scoreType: $author$project$Models$Types$FourOfKind},
+		{description: '大きめボーナス', multiplier: 1.6, scoreType: $author$project$Models$Types$FullHouse},
+		{description: '小ボーナス', multiplier: 1.2, scoreType: $author$project$Models$Types$SmallStraight},
+		{description: '大きなボーナス', multiplier: 1.8, scoreType: $author$project$Models$Types$LargeStraight},
+		{description: '最大ボーナス', multiplier: 2.0, scoreType: $author$project$Models$Types$Yacht}
+	]);
+var $author$project$Models$Score$DamageCalculator$getScoreMultiplier = function (scoreType) {
+	if (scoreType.$ === 'Special') {
+		return 1.0;
+	} else {
+		return A2(
+			$elm$core$Maybe$withDefault,
+			1.0,
+			A2(
+				$elm$core$Maybe$map,
+				function ($) {
+					return $.multiplier;
+				},
+				$elm$core$List$head(
+					A2(
+						$elm$core$List$filter,
+						function (m) {
+							return _Utils_eq(m.scoreType, scoreType);
+						},
+						$author$project$Models$Score$DamageCalculator$scoreMultipliers))));
+	}
+};
+var $elm$core$Basics$round = _Basics_round;
 var $author$project$Models$Score$sumOfFace = F2(
 	function (face, dice) {
 		return $elm$core$List$sum(
@@ -6404,6 +6344,42 @@ var $author$project$Models$Score$sumOfFace = F2(
 						return _Utils_eq(d.value, face);
 					},
 					dice)));
+	});
+var $author$project$Models$Score$DamageCalculator$calculateDamageFromScore = F2(
+	function (scoreType, dice) {
+		var scoreValue = function () {
+			switch (scoreType.$) {
+				case 'Aces':
+					return A2($author$project$Models$Score$sumOfFace, 1, dice);
+				case 'Twos':
+					return A2($author$project$Models$Score$sumOfFace, 2, dice);
+				case 'Threes':
+					return A2($author$project$Models$Score$sumOfFace, 3, dice);
+				case 'Fours':
+					return A2($author$project$Models$Score$sumOfFace, 4, dice);
+				case 'Fives':
+					return A2($author$project$Models$Score$sumOfFace, 5, dice);
+				case 'Sixes':
+					return A2($author$project$Models$Score$sumOfFace, 6, dice);
+				case 'Choice':
+					return $author$project$Models$Score$sumAllDice(dice);
+				case 'FourOfKind':
+					return $author$project$Models$Score$calculateFourOfKind(dice);
+				case 'FullHouse':
+					return $author$project$Models$Score$calculateFullHouse(dice);
+				case 'SmallStraight':
+					return $author$project$Models$Score$calculateSmallStraight(dice);
+				case 'LargeStraight':
+					return $author$project$Models$Score$calculateLargeStraight(dice);
+				case 'Yacht':
+					return $author$project$Models$Score$calculateYacht(dice);
+				default:
+					return 10;
+			}
+		}();
+		var finalDamage = $elm$core$Basics$round(
+			scoreValue * $author$project$Models$Score$DamageCalculator$getScoreMultiplier(scoreType));
+		return A2($elm$core$Basics$max, 1, finalDamage);
 	});
 var $author$project$Models$Score$calculatePossibleScores = F2(
 	function (dice, scoreCard) {
@@ -7285,7 +7261,7 @@ var $author$project$Update$Update$update = F2(
 						if (_v18.$ === 'Just') {
 							var scoreType = _v18.a;
 							var updatedScoreCard = A2($author$project$Models$Score$calculatePossibleScores, battle.dice, battle.scoreCard);
-							var scoreDamage = A2($author$project$Models$Score$DamageCalculator$calculateDamageFromScore, scoreType, updatedScoreCard);
+							var scoreDamage = A2($author$project$Models$Score$DamageCalculator$calculateDamageFromScore, scoreType, battle.dice);
 							var updatedEnemy = {
 								attacks: battle.enemy.attacks,
 								hp: A2($elm$core$Basics$max, 0, battle.enemy.hp - scoreDamage),

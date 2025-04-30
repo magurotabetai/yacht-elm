@@ -1,4 +1,4 @@
-module Models.Score.DamageCalculator exposing 
+module Models.Score.DamageCalculator exposing
     ( ScoreMultiplier
     , getScoreMultiplier
     , calculateDamageFromScore
@@ -6,7 +6,8 @@ module Models.Score.DamageCalculator exposing
     )
 
 import Models.Types exposing (ScoreType(..))
-import Models.Score exposing (ScoreCard)
+import Models.Score exposing (ScoreCard, sumOfFace, sumAllDice, calculateFourOfKind, calculateFullHouse, calculateSmallStraight, calculateLargeStraight, calculateYacht)
+import Models.Dice exposing (Dice)
 
 -- スコア倍率を表す型
 type alias ScoreMultiplier =
@@ -57,32 +58,29 @@ formatMultiplier scoreType =
         ""
 
 -- スコアからダメージを計算する
-calculateDamageFromScore : ScoreType -> ScoreCard -> Int
-calculateDamageFromScore scoreType scoreCard =
+calculateDamageFromScore : ScoreType -> List Dice -> Int
+calculateDamageFromScore scoreType dice =
     let
-        -- スコアタイプに応じた値を取得
-        scoreValue = 
+        -- ダイスの出目から直接スコアを計算
+        scoreValue =
             case scoreType of
-                Aces -> Maybe.withDefault 0 scoreCard.aces
-                Twos -> Maybe.withDefault 0 scoreCard.twos
-                Threes -> Maybe.withDefault 0 scoreCard.threes
-                Fours -> Maybe.withDefault 0 scoreCard.fours
-                Fives -> Maybe.withDefault 0 scoreCard.fives
-                Sixes -> Maybe.withDefault 0 scoreCard.sixes
-                Choice -> Maybe.withDefault 0 scoreCard.choice
-                FourOfKind -> Maybe.withDefault 0 scoreCard.fourOfKind
-                FullHouse -> Maybe.withDefault 0 scoreCard.fullHouse
-                SmallStraight -> Maybe.withDefault 0 scoreCard.smallStraight
-                LargeStraight -> Maybe.withDefault 0 scoreCard.largeStraight
-                Yacht -> Maybe.withDefault 0 scoreCard.yacht
-                Special name -> 
-                    -- 特殊スコアは対応する specialScores から取得
-                    scoreCard.specialScores
-                        |> List.filter (\s -> s.scoreType == name)
-                        |> List.head
-                        |> Maybe.andThen .value
-                        |> Maybe.withDefault 0
-        
+                Aces -> sumOfFace 1 dice
+                Twos -> sumOfFace 2 dice
+                Threes -> sumOfFace 3 dice
+                Fours -> sumOfFace 4 dice
+                Fives -> sumOfFace 5 dice
+                Sixes -> sumOfFace 6 dice
+                Choice -> sumAllDice dice
+                FourOfKind -> calculateFourOfKind dice
+                FullHouse -> calculateFullHouse dice
+                SmallStraight -> calculateSmallStraight dice
+                LargeStraight -> calculateLargeStraight dice
+                Yacht -> calculateYacht dice
+                Special _ ->
+                    -- 特殊スコアの場合はデフォルト値を返す
+                    -- 本来は特殊スコア計算ロジックが必要
+                    10
+
         -- 倍率を適用したダメージ計算
         finalDamage = round (toFloat scoreValue * getScoreMultiplier scoreType)
     in

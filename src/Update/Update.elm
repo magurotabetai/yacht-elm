@@ -219,7 +219,7 @@ update msg model =
                                             calculatePossibleScores battle.dice battle.scoreCard
 
                                         -- 選択したスコアタイプに基づいてダメージを計算
-                                        scoreDamage = calculateDamageFromScore scoreType updatedScoreCard
+                                        scoreDamage = calculateDamageFromScore scoreType battle.dice
 
                                         updatedEnemy =
                                             { id = battle.enemy.id
