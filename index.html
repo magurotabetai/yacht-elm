@@ -6672,7 +6672,10 @@ var $author$project$Models$Game$startBattle = F3(
 		var newSeed = _v0.b;
 		var battleWithRolledDice = _Utils_update(
 			initialBattle,
-			{dice: rolledDice});
+			{
+				dice: rolledDice,
+				scoreCard: A2($author$project$Models$Score$calculatePossibleScores, rolledDice, initialBattle.scoreCard)
+			});
 		var updatedRun = _Utils_update(
 			run,
 			{
@@ -7038,9 +7041,10 @@ var $author$project$Update$Update$update = F2(
 							var _v10 = A2($elm$random$Random$step, generator, model.seed);
 							var newDice = _v10.a;
 							var newSeed = _v10.b;
+							var updatedScoreCard = A2($author$project$Models$Score$calculatePossibleScores, newDice, battle.scoreCard);
 							var updatedBattle = _Utils_update(
 								battle,
-								{dice: newDice, remainingRerolls: battle.remainingRerolls - 1});
+								{dice: newDice, remainingRerolls: battle.remainingRerolls - 1, scoreCard: updatedScoreCard});
 							var updatedRun = _Utils_update(
 								run,
 								{

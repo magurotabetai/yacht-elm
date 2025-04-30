@@ -202,7 +202,11 @@ startBattle enemy boss run =
         (rolledDice, newSeed) = Random.step diceRollGenerator (Random.initialSeed run.seed)
 
         -- 振ったダイスで初期バトル状態を更新
-        battleWithRolledDice = { initialBattle | dice = rolledDice }
+        battleWithRolledDice = 
+            { initialBattle 
+            | dice = rolledDice
+            , scoreCard = Models.Score.calculatePossibleScores rolledDice initialBattle.scoreCard 
+            }
 
         updatedRun =
             { run | currentBattle = Just battleWithRolledDice }

@@ -107,10 +107,14 @@ update msg model =
                                     generator = rollMultipleDice battle.dice
                                     ( newDice, newSeed ) = Random.step generator model.seed
 
+                                    -- リロール後に可能なスコアを再計算
+                                    updatedScoreCard = calculatePossibleScores newDice battle.scoreCard
+
                                     updatedBattle =
                                         { battle
                                         | dice = newDice
                                         , remainingRerolls = battle.remainingRerolls - 1
+                                        , scoreCard = updatedScoreCard
                                         }
 
                                     updatedRun =
