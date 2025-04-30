@@ -1,14 +1,15 @@
 # ヨットクエスト（YachtQuest）仕様書
 
 **作成日**: 2025年4月30日
+**更新日**: 2025年4月30日
 
 ## A. 機能仕様
 
 ### 1. コアゲームプレイ
 
 #### 1.1 ダイスシステム
-- **ダイスの種類**: 基本6面ダイス（1-6の数字）、特殊面ダイス
-- **振り直し**: 1ターンにつき最大3回まで特定のダイスを選択して振り直し可能
+- **ダイスの種類**: 基本6面ダイス（1-6の数字）、属性ダイス（火、氷、雷）、特殊ダイス（呪われたダイス、レアダイス）
+- **振り直し**: 1ターンにつき最大3回まで特定のダイスを選択して振り直し可能（キャラクターの特殊能力によって変動）
 - **ホールド機能**: 維持したいダイスを選択・固定する機能
 
 #### 1.2 スコアリングシステム
@@ -28,10 +29,14 @@
 | ヨット | 同じ目が5つ | 固定値50点 |
 | 特殊役 | ゲーム内で獲得する特殊役 | 役による |
 
-#### 1.3 ゲームモード
-- **ランモード**: ローグライト形式で1回の冒険を完遂するモード
-- **デイリーチャレンジ**: 毎日更新される固定シードの挑戦
-- **トレーニングモード**: 特定のシナリオや状況を練習できるモード
+#### 1.3 ゲームフェーズ
+- **メインメニュー**: ゲームの開始画面
+- **キャラクター選択**: プレイヤーキャラクターの選択画面
+- **マップ探索**: 冒険マップの探索画面
+- **バトルフェーズ**: 敵との戦闘画面
+- **イベントフェーズ**: 特殊イベント画面
+- **ゲームオーバー**: 敗北時の画面
+- **ビクトリー**: 勝利時の画面
 
 #### 1.4 プレイヤー進行
 - **経験値システム**: バトル勝利やイベントで経験値を獲得し、レベルアップで新しい能力解放
@@ -48,29 +53,29 @@
 #### 2.2 敵システム
 - **通常敵**: 基本的な能力と戦術を持つ敵
 - **エリート敵**: 強力な特殊能力を持つ強敵
-- **ボス敵**: 各エリア最後に登場する固有の攻略が必要なボス
+- **ボス敵**: 各エリア最後に登場する固有の攻略が必要なボス敵、特殊フェーズを持つ
 
 #### 2.3 アイテムとアップグレード
 - **アイテム取得方法**: 戦闘報酬、商人、宝箱、イベント
-- **アイテム種類**: パッシブ効果、アクティブスキル、ダイス強化、消費アイテム
-- **アップグレード**: 既存アイテムの強化や改造システム
+- **アイテム種類**: パッシブ効果、アクティブスキル（クールダウンあり）、ダイス修飾、消費アイテム
+- **アイテムレアリティ**: Common, Uncommon, Rare, Epic, Legendary
 
 ### 3. 実装機能
 
 #### 3.1 セーブ・ロードシステム
-- **オートセーブ**: ノード移動時に自動保存
+- **オートセーブ**: ノード移動時に自動保存（設定で切替可能）
 - **マニュアルセーブ**: 任意のタイミングで保存可能
 - **マルチプロファイル**: 複数のセーブデータ管理
 
 #### 3.2 設定オプション
-- **オーディオ設定**: 音楽・効果音の音量調整
-- **グラフィック設定**: 解像度、フルスクリーン切替、パフォーマンスオプション
-- **ゲームプレイ設定**: テキスト速度、オートホールド設定など
+- **オーディオ設定**: 音楽・効果音・マスター音量の調整
+- **グラフィック設定**: 解像度、フルスクリーン切替、エフェクトクオリティ
+- **ゲームプレイ設定**: オートセーブ、難易度、チュートリアル表示
 
 #### 3.3 アクセシビリティ機能
-- **色覚サポート**: 色覚異常に配慮した色設定
+- **色覚サポート**: 色覚異常に配慮したカラーブラインドモード
 - **テキストサイズ**: 文字サイズ調整機能
-- **コントラスト調整**: 視認性向上のためのUI調整
+- **コントラスト調整**: 視認性向上のためのハイコントラストモード
 
 ## B. デザイン（UI/演出）仕様
 
@@ -130,13 +135,22 @@ type alias GameState =
     , currentRun : Maybe Run
     , unlockedContent : UnlockedContent
     , settings : Settings
+    , gamePhase : GamePhase
+    , seed : Random.Seed
     }
 
 type alias Player =
     { id : String
     , name : String
-    , selectedCharacter : Character
+    , selectedCharacter : Maybe Character
     , stats : PlayerStats
+    }
+
+type alias PlayerStats =
+    { totalRuns : Int
+    , bossesDefeated : List String
+    , highScore : Int
+    , totalGold : Int
     }
 
 type alias Run =
@@ -147,8 +161,20 @@ type alias Run =
     , inventory : Inventory
     , battlesWon : Int
     , currentHP : Int
+    , maxHP : Int
     , gold : Int
+    , currentBattle : Maybe Battle
+    , characterId : String
     }
+
+type GamePhase
+    = MainMenu
+    | CharacterSelection
+    | InRun
+    | BattlePhase
+    | EventPhase
+    | GameOver
+    | Victory
 ```
 
 #### 1.2 ダイスとスコアモデル
@@ -163,11 +189,18 @@ type alias Dice =
 
 type DiceType
     = Normal
-    | Fire
-    | Ice
-    | Thunder
-    | Cursed
-    | Rare
+    | FireDice
+    | IceDice
+    | ThunderDice
+    | CursedDice
+    | RareDice
+
+type DiceEffect
+    = NoEffect
+    | DoubleFace
+    | LockValue
+    | RerollOnce
+    | AddBonus Int
 
 type alias ScoreCard =
     { aces : Maybe Int
@@ -184,6 +217,21 @@ type alias ScoreCard =
     , yacht : Maybe Int
     , specialScores : List SpecialScore
     }
+
+type ScoreType
+    = Aces
+    | Twos
+    | Threes
+    | Fours
+    | Fives
+    | Sixes
+    | Choice
+    | FourOfKind
+    | FullHouse
+    | SmallStraight
+    | LargeStraight
+    | Yacht
+    | Special String
 ```
 
 #### 1.3 アイテムとエフェクトモデル
@@ -211,6 +259,13 @@ type ItemEffect
     | DoubleScore ScoreType
     | AutoHoldValue Int
     | DamageBonus Int
+
+type Rarity
+    = Common
+    | Uncommon
+    | Rare
+    | Epic
+    | Legendary
 ```
 
 #### 1.4 キャラクターモデル
@@ -244,57 +299,6 @@ type UnlockCondition
     | FindSecretItem String -- 特定のアイテムを発見
 ```
 
-#### 1.5 初期キャラクター
-```elm
--- 初期キャラクター1: ラッキーローラー
-luckyRoller : Character
-luckyRoller =
-    { id = "lucky_roller"
-    , name = "ラッキーローラー"
-    , description = "元ギャンブラーで運に恵まれた冒険者。追加のリロールチャンスを持ち、幸運な一投で勝負を決める。"
-    , portrait = "assets/characters/lucky_roller.png"
-    , startingHP = 20
-    , maxHP = 20
-    , specialAbility = ExtraReroll
-    , startingItems =
-        [ { id = "lucky_coin"
-          , name = "幸運のコイン"
-          , description = "毎ターン、一度だけ1つのダイスを任意の目に変えられる"
-          , rarity = Common
-          , itemType = Active { cooldown = 3, currentCooldown = 0 }
-          , effects = [ ModifyDiceValue 0 ]
-          , cost = 0
-          , unlocked = True
-          }
-        ]
-    , unlockCondition = Just StarterCharacter
-    }
-
--- 初期キャラクター2: ストラテジスト
-strategist : Character
-strategist =
-    { id = "strategist"
-    , name = "ストラテジスト"
-    , description = "計算高い戦術家。ストレートの役でボーナス点を獲得し、長期的な戦略が得意。"
-    , portrait = "assets/characters/strategist.png"
-    , startingHP = 18
-    , maxHP = 18
-    , specialAbility = ScoreBonus SmallStraight 5
-    , startingItems =
-        [ { id = "tactical_manual"
-          , name = "戦術マニュアル"
-          , description = "毎バトル開始時に、一度だけ全てのダイスを振り直せる"
-          , rarity = Common
-          , itemType = Passive
-          , effects = [ AddReroll 1 ]
-          , cost = 0
-          , unlocked = True
-          }
-        ]
-    , unlockCondition = Just StarterCharacter
-    }
-```
-
 ### 2. マップと遭遇データ
 
 #### 2.1 マップ生成アルゴリズム
@@ -318,58 +322,80 @@ type alias Node =
     }
 
 type NodeType
-    = Battle Enemy
-    | EliteBattle Enemy
-    | Rest
-    | Merchant
-    | Treasure
-    | Event EventType
-    | Boss Boss
+    = BattleNode EnemyData
+    | EliteBattleNode EnemyData
+    | RestNode
+    | MerchantNode
+    | TreasureNode
+    | EventNode EventType
+    | BossNode BossData
 ```
 
 #### 2.2 敵データ設計
 ```elm
-type alias Enemy =
+type alias EnemyData =
     { id : String
     , name : String
     , hp : Int
-    , attacks : List Attack
+    , maxHp : Int
+    , attacks : List AttackData
     , scoreBonus : List ScoreBonus
-    , rewards : List Reward
+    , rewards : List RewardData
     }
+
+type alias AttackData =
+    { name : String
+    , damage : Int
+    , description : String
+    }
+
+type alias BossData =
+    { enemy : EnemyData
+    , specialPhases : List BossPhase
+    }
+
+type alias BossPhase =
+    { hpThreshold : Int
+    , description : String
+    , effect : BossEffect
+    }
+
+type BossEffect
+    = LockDice Int
+    | DisableReroll
+    | DoubleAttack
+    | HealSelf Int
+    | SummonMinions
 
 type ScoreBonus
     = BonusType ScoreType Int
     | PenaltyType ScoreType Int
-
-type alias Boss =
-    { enemy : Enemy
-    , specialPhases : List BossPhase
-    }
 ```
 
-### 3. 永続化データ
+### 3. バトルシステム
 
-#### 3.1 保存データフォーマット
+#### 3.1 バトルの状態管理
 ```elm
-type alias SaveData =
-    { version : String
-    , lastSaved : Time.Posix
-    , gameState : GameState
+type alias Battle =
+    { enemy : EnemyData
+    , boss : Maybe BossData
+    , turn : Int
+    , dice : List Dice
+    , remainingRerolls : Int
+    , scoreCard : ScoreCard
+    , playerDamageDealt : Int
+    , enemyDamageDealt : Int
+    , battleLog : List String
+    }
+
+type alias Inventory =
+    { items : List Item
+    , activeItemSlots : List String  -- アクティブアイテムとして装備されているアイテムIDのリスト
     }
 ```
 
-#### 3.2 解除コンテンツ管理
-```elm
-type alias UnlockedContent =
-    { characters : List Character
-    , items : List String
-    , specialDice : List String
-    , achievements : List String
-    }
-```
+### 4. 設定データ
 
-#### 3.3 設定データ
 ```elm
 type alias Settings =
     { audio : AudioSettings
@@ -383,30 +409,50 @@ type alias AudioSettings =
     , sfxVolume : Float
     , masterVolume : Float
     }
+
+type alias GraphicsSettings =
+    { resolution : String
+    , fullscreen : Bool
+    , effectQuality : String
+    }
+
+type alias GameplaySettings =
+    { autosave : Bool
+    , difficultyLevel : String
+    , tutorialEnabled : Bool
+    }
+
+type alias AccessibilitySettings =
+    { colorblindMode : Bool
+    , textSize : String
+    , highContrast : Bool
+    }
 ```
 
 ## 実装優先度と開発ロードマップ
 
-### フェーズ1: 基本機能実装 (MVP)
-1. 基本的なダイスゲーム機能
-2. スコアカード実装
-3. 単一バトルシステム
-4. 基本UI
+### フェーズ1: 基本機能実装 (MVP) ✓
+1. ✓ 基本的なダイスゲーム機能
+2. ✓ スコアカード実装
+3. ✓ 単一バトルシステム
+4. ✓ 基本UI
 
 ### フェーズ2: ローグライト要素
-1. マップ生成システム
-2. 敵バリエーション
-3. アイテムシステム
-4. 報酬メカニズム
+1. ✓ マップ生成システム
+2. ◎ 敵バリエーション
+3. ◎ アイテムシステム
+4. ○ 報酬メカニズム
 
 ### フェーズ3: 拡張と最適化
-1. 特殊ダイスとエフェクト
-2. セーブ・ロードシステム
-3. アニメーションと演出強化
-4. バランス調整
+1. ○ 特殊ダイスとエフェクト
+2. × セーブ・ロードシステム
+3. × アニメーションと演出強化
+4. × バランス調整
 
 ### フェーズ4: ポリッシュと追加コンテンツ
-1. 追加キャラクターとアイテム
-2. 実績システム
-3. デイリーチャレンジモード
-4. 最適化とバグ修正
+1. × 追加キャラクターとアイテム
+2. × 実績システム
+3. × デイリーチャレンジモード
+4. × 最適化とバグ修正
+
+凡例: ✓ 完了, ◎ 進行中, ○ 部分的に実装, × 未実装
