@@ -6029,6 +6029,124 @@ var $author$project$Main$subscriptions = function (_v0) {
 var $author$project$Models$Types$BattlePhase = {$: 'BattlePhase'};
 var $author$project$Models$Types$CharacterSelection = {$: 'CharacterSelection'};
 var $author$project$Models$Types$InRun = {$: 'InRun'};
+var $elm$core$Maybe$andThen = F2(
+	function (callback, maybeValue) {
+		if (maybeValue.$ === 'Just') {
+			var value = maybeValue.a;
+			return callback(value);
+		} else {
+			return $elm$core$Maybe$Nothing;
+		}
+	});
+var $elm$core$List$filter = F2(
+	function (isGood, list) {
+		return A3(
+			$elm$core$List$foldr,
+			F2(
+				function (x, xs) {
+					return isGood(x) ? A2($elm$core$List$cons, x, xs) : xs;
+				}),
+			_List_Nil,
+			list);
+	});
+var $elm$core$List$head = function (list) {
+	if (list.b) {
+		var x = list.a;
+		var xs = list.b;
+		return $elm$core$Maybe$Just(x);
+	} else {
+		return $elm$core$Maybe$Nothing;
+	}
+};
+var $elm$core$Maybe$withDefault = F2(
+	function (_default, maybe) {
+		if (maybe.$ === 'Just') {
+			var value = maybe.a;
+			return value;
+		} else {
+			return _default;
+		}
+	});
+var $author$project$Update$Update$calculateDamageFromScore = F2(
+	function (scoreType, scoreCard) {
+		var scoreValue = function () {
+			switch (scoreType.$) {
+				case 'Aces':
+					return A2($elm$core$Maybe$withDefault, 0, scoreCard.aces);
+				case 'Twos':
+					return A2($elm$core$Maybe$withDefault, 0, scoreCard.twos);
+				case 'Threes':
+					return A2($elm$core$Maybe$withDefault, 0, scoreCard.threes);
+				case 'Fours':
+					return A2($elm$core$Maybe$withDefault, 0, scoreCard.fours);
+				case 'Fives':
+					return A2($elm$core$Maybe$withDefault, 0, scoreCard.fives);
+				case 'Sixes':
+					return A2($elm$core$Maybe$withDefault, 0, scoreCard.sixes);
+				case 'Choice':
+					return A2($elm$core$Maybe$withDefault, 0, scoreCard.choice);
+				case 'FourOfKind':
+					return A2($elm$core$Maybe$withDefault, 0, scoreCard.fourOfKind);
+				case 'FullHouse':
+					return A2($elm$core$Maybe$withDefault, 0, scoreCard.fullHouse);
+				case 'SmallStraight':
+					return A2($elm$core$Maybe$withDefault, 0, scoreCard.smallStraight);
+				case 'LargeStraight':
+					return A2($elm$core$Maybe$withDefault, 0, scoreCard.largeStraight);
+				case 'Yacht':
+					return A2($elm$core$Maybe$withDefault, 0, scoreCard.yacht);
+				default:
+					var name = scoreType.a;
+					return A2(
+						$elm$core$Maybe$withDefault,
+						0,
+						A2(
+							$elm$core$Maybe$andThen,
+							function ($) {
+								return $.value;
+							},
+							$elm$core$List$head(
+								A2(
+									$elm$core$List$filter,
+									function (s) {
+										return _Utils_eq(s.scoreType, name);
+									},
+									scoreCard.specialScores))));
+			}
+		}();
+		var bonusDamage = function () {
+			switch (scoreType.$) {
+				case 'Aces':
+					return 0;
+				case 'Twos':
+					return 0;
+				case 'Threes':
+					return 0;
+				case 'Fours':
+					return 0;
+				case 'Fives':
+					return 0;
+				case 'Sixes':
+					return 0;
+				case 'Choice':
+					return 1;
+				case 'FourOfKind':
+					return 3;
+				case 'FullHouse':
+					return 4;
+				case 'SmallStraight':
+					return 5;
+				case 'LargeStraight':
+					return 7;
+				case 'Yacht':
+					return 10;
+				default:
+					return 5;
+			}
+		}();
+		var baseDamage = ((scoreValue + 1) / 2) | 0;
+		return A2($elm$core$Basics$max, 1, baseDamage + bonusDamage);
+	});
 var $elm$core$List$any = F2(
 	function (isOkay, list) {
 		any:
@@ -6127,15 +6245,6 @@ var $author$project$Models$Score$calculateFullHouse = function (dice) {
 		valueCounts);
 	return (has3OfKind && has2OfKind) ? 25 : 0;
 };
-var $elm$core$List$head = function (list) {
-	if (list.b) {
-		var x = list.a;
-		var xs = list.b;
-		return $elm$core$Maybe$Just(x);
-	} else {
-		return $elm$core$Maybe$Nothing;
-	}
-};
 var $elm$core$List$isEmpty = function (xs) {
 	if (!xs.b) {
 		return true;
@@ -6148,15 +6257,6 @@ var $elm$core$List$sortBy = _List_sortBy;
 var $elm$core$List$sort = function (xs) {
 	return A2($elm$core$List$sortBy, $elm$core$Basics$identity, xs);
 };
-var $elm$core$Maybe$withDefault = F2(
-	function (_default, maybe) {
-		if (maybe.$ === 'Just') {
-			var value = maybe.a;
-			return value;
-		} else {
-			return _default;
-		}
-	});
 var $author$project$Models$Score$calculateLargeStraight = function (dice) {
 	var sortedValues = $elm$core$List$reverse(
 		A3(
@@ -6261,17 +6361,6 @@ var $author$project$Models$Score$calculateYacht = function (dice) {
 		},
 		valueCounts) ? 50 : 0;
 };
-var $elm$core$List$filter = F2(
-	function (isGood, list) {
-		return A3(
-			$elm$core$List$foldr,
-			F2(
-				function (x, xs) {
-					return isGood(x) ? A2($elm$core$List$cons, x, xs) : xs;
-				}),
-			_List_Nil,
-			list);
-	});
 var $author$project$Models$Score$sumOfFace = F2(
 	function (face, dice) {
 		return $elm$core$List$sum(
@@ -7171,7 +7260,7 @@ var $author$project$Update$Update$update = F2(
 						if (_v18.$ === 'Just') {
 							var scoreType = _v18.a;
 							var updatedScoreCard = A2($author$project$Models$Score$calculatePossibleScores, battle.dice, battle.scoreCard);
-							var scoreDamage = 5;
+							var scoreDamage = A2($author$project$Update$Update$calculateDamageFromScore, scoreType, updatedScoreCard);
 							var updatedEnemy = {
 								attacks: battle.enemy.attacks,
 								hp: A2($elm$core$Basics$max, 0, battle.enemy.hp - scoreDamage),

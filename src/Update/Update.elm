@@ -5,7 +5,7 @@ import Models.Character exposing (Character)
 import Models.Dice exposing (rollMultipleDice, toggleHold)
 import Models.Game exposing (GameState, Run, Battle, initGameState, startNewRun, startBattle)
 import Models.Map exposing (moveToNode, getAvailableNodes)
-import Models.Score exposing (calculatePossibleScores)
+import Models.Score exposing (calculatePossibleScores, ScoreCard)
 import Models.Types exposing (GamePhase(..), NodeType(..), ScoreType(..), EnemyData, BossData, AttackData)
 import Random
 import Task
@@ -217,8 +217,8 @@ update msg model =
                                         updatedScoreCard =
                                             calculatePossibleScores battle.dice battle.scoreCard
 
-                                        -- スコアによるダメージを計算（仮実装）
-                                        scoreDamage = 5
+                                        -- 選択したスコアタイプに基づいてダメージを計算
+                                        scoreDamage = calculateDamageFromScore scoreType updatedScoreCard
 
                                         updatedEnemy =
                                             { id = battle.enemy.id
@@ -335,6 +335,57 @@ getCurrentNodeEnemy run =
 
         Nothing ->
             Nothing
+
+-- ヘルパー関数：スコア値からダメージを計算
+calculateDamageFromScore : ScoreType -> ScoreCard -> Int
+calculateDamageFromScore scoreType scoreCard =
+    let
+        -- スコアタイプに応じた値を取得
+        scoreValue =
+            case scoreType of
+                Aces -> Maybe.withDefault 0 scoreCard.aces
+                Twos -> Maybe.withDefault 0 scoreCard.twos
+                Threes -> Maybe.withDefault 0 scoreCard.threes
+                Fours -> Maybe.withDefault 0 scoreCard.fours
+                Fives -> Maybe.withDefault 0 scoreCard.fives
+                Sixes -> Maybe.withDefault 0 scoreCard.sixes
+                Choice -> Maybe.withDefault 0 scoreCard.choice
+                FourOfKind -> Maybe.withDefault 0 scoreCard.fourOfKind
+                FullHouse -> Maybe.withDefault 0 scoreCard.fullHouse
+                SmallStraight -> Maybe.withDefault 0 scoreCard.smallStraight
+                LargeStraight -> Maybe.withDefault 0 scoreCard.largeStraight
+                Yacht -> Maybe.withDefault 0 scoreCard.yacht
+                Special name ->
+                    -- 特殊スコアは対応する specialScores から取得
+                    scoreCard.specialScores
+                        |> List.filter (\s -> s.scoreType == name)
+                        |> List.head
+                        |> Maybe.andThen .value
+                        |> Maybe.withDefault 0
+
+        -- 基本ダメージ計算（スコア値をそのまま使用）
+        baseDamage = scoreValue
+
+        -- スコアタイプに応じたボーナスダメージ
+        bonusDamage =
+            case scoreType of
+                -- 上の部は基本通り
+                Aces -> 0
+                Twos -> 0
+                Threes -> 0
+                Fours -> 0
+                Fives -> 0
+                Sixes -> 0
+                -- 下の部はボーナスダメージあり
+                Choice -> 1  -- チョイスは少しボーナス
+                FourOfKind -> 3  -- フォーカインドは中程度ボーナス
+                FullHouse -> 4  -- フルハウスは大きめボーナス
+                SmallStraight -> 5  -- Sストレートは大きめボーナス
+                LargeStraight -> 7  -- Lストレートは大きなボーナス
+                Yacht -> 10  -- ヨットは最大ボーナス
+                Special _ -> 5  -- 特殊スコアは中程度のボーナス
+    in
+    max 1 (baseDamage + bonusDamage)  -- 最低でも1ダメージは保証
 
 -- ノード進入時の処理
 handleNodeEntry : String -> Run -> Random.Seed -> ( GamePhase, ( Cmd Msg, Random.Seed ) )
