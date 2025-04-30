@@ -80,7 +80,13 @@ viewBattleLeft battle =
             , div [ class "dice-container" ]
                 (List.map viewDice battle.dice)
             , div [ class "rerolls-info" ]
-                [ text ("残りリロール: " ++ String.fromInt battle.remainingRerolls ++ " / 2") ]
+                [ text
+                    ("残りリロール: " ++
+                        String.fromInt battle.remainingRerolls ++
+                        " / " ++
+                        String.fromInt battle.maxRerolls
+                    )
+                ]
             ]
         , div [ class "action-buttons" ]
             [ viewButton "振り直す" RollDice (battle.remainingRerolls <= 0)
@@ -151,8 +157,8 @@ viewScoreRow : Battle -> String -> String -> ScoreType -> Html Msg
 viewScoreRow battle label value scoreType =
     let
         isAvailable = isScoreAvailable scoreType battle.scoreHistory
-        rowClass = 
-            "score-row" ++ 
+        rowClass =
+            "score-row" ++
             (if battle.selectedScoreType == Just scoreType then " selected-score" else "") ++
             (if not isAvailable then " used-score" else "")
     in

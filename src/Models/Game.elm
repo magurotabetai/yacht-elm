@@ -56,6 +56,7 @@ type alias Battle =
     , turn : Int
     , dice : List Dice
     , remainingRerolls : Int
+    , maxRerolls : Int  -- 最大リロール回数を追加
     , scoreHistory : ScoreHistory  -- scoreCardの代わりにscoreHistoryを使用
     , selectedScoreType : Maybe ScoreType  -- 選択されているがまだ確定していないスコアタイプ
     , playerDamageDealt : Int
@@ -180,8 +181,13 @@ startNewRun character gameState =
 startBattle : EnemyData -> Maybe BossData -> Run -> ( Run, Cmd msg )
 startBattle enemy boss run =
     let
-        -- キャラクターに基づいてリロール回数を決定（デフォルトは2回）
-        rerollCount = 2
+        -- キャラクターに基づいてリロール回数を決定
+        -- ラッキーローラーは3回、それ以外は2回
+        rerollCount =
+            if run.characterId == "lucky_roller" then
+                3  -- ラッキーローラーは3回リロール可能
+            else
+                2  -- その他のキャラクターは2回
 
         initialBattle =
             { enemy = enemy
@@ -189,6 +195,7 @@ startBattle enemy boss run =
             , turn = 1
             , dice = standardDiceSet
             , remainingRerolls = rerollCount
+            , maxRerolls = rerollCount  -- 初期値はremainingRerollsと同じ
             , scoreHistory = initScoreHistory  -- scoreCardからscoreHistoryに変更
             , selectedScoreType = Nothing
             , playerDamageDealt = 0

@@ -6604,7 +6604,7 @@ var $elm$random$Random$step = F2(
 	});
 var $author$project$Models$Game$startBattle = F3(
 	function (enemy, boss, run) {
-		var rerollCount = 2;
+		var rerollCount = (run.characterId === 'lucky_roller') ? 3 : 2;
 		var initialBattle = {
 			battleLog: _List_fromArray(
 				[enemy.name + 'が現れた！']),
@@ -6612,6 +6612,7 @@ var $author$project$Models$Game$startBattle = F3(
 			dice: $author$project$Models$Dice$standardDiceSet,
 			enemy: enemy,
 			enemyDamageDealt: 0,
+			maxRerolls: rerollCount,
 			playerDamageDealt: 0,
 			remainingRerolls: rerollCount,
 			scoreHistory: $author$project$Models$Score$initScoreHistory,
@@ -7177,9 +7178,12 @@ var $author$project$Update$Update$update = F2(
 								var gamePhase = _v20.a;
 								var finalLog = _v20.b;
 								var finalEnemy = _v20.c;
-								var updatedBattle = _Utils_update(
-									battle,
-									{battleLog: finalLog, dice: rolledDice, enemy: finalEnemy, remainingRerolls: 2, scoreHistory: updatedScoreHistory, selectedScoreType: $elm$core$Maybe$Nothing, turn: battle.turn + 1});
+								var updatedBattle = function () {
+									var maxRerolls = (run.characterId === 'lucky_roller') ? 3 : 2;
+									return _Utils_update(
+										battle,
+										{battleLog: finalLog, dice: rolledDice, enemy: finalEnemy, maxRerolls: maxRerolls, remainingRerolls: maxRerolls, scoreHistory: updatedScoreHistory, selectedScoreType: $elm$core$Maybe$Nothing, turn: battle.turn + 1});
+								}();
 								var updatedRun = _Utils_eq(gamePhase, $author$project$Models$Types$InRun) ? _Utils_update(
 									run,
 									{battlesWon: run.battlesWon + 1, currentBattle: $elm$core$Maybe$Nothing, gold: run.gold + 10}) : _Utils_update(
@@ -7670,7 +7674,7 @@ var $author$project$Views$Battle$viewBattleLeft = function (battle) {
 						_List_fromArray(
 							[
 								$elm$html$Html$text(
-								'残りリロール: ' + ($elm$core$String$fromInt(battle.remainingRerolls) + ' / 2'))
+								'残りリロール: ' + ($elm$core$String$fromInt(battle.remainingRerolls) + (' / ' + $elm$core$String$fromInt(battle.maxRerolls))))
 							]))
 					])),
 				A2(

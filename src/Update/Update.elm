@@ -272,11 +272,20 @@ update msg model =
 
                                             -- 戦闘情報を更新
                                             updatedBattle =
+                                                let
+                                                    -- キャラクターに基づいてリロール回数を決定
+                                                    maxRerolls =
+                                                        if run.characterId == "lucky_roller" then
+                                                            3  -- ラッキーローラーは3回リロール可能
+                                                        else
+                                                            2  -- その他のキャラクターは2回
+                                                in
                                                 { battle
                                                 | scoreHistory = updatedScoreHistory
                                                 , enemy = finalEnemy
                                                 , turn = battle.turn + 1
-                                                , remainingRerolls = 2  -- リロール回数をリセット
+                                                , remainingRerolls = maxRerolls  -- リロール回数をリセット
+                                                , maxRerolls = maxRerolls  -- 最大リロール回数を設定
                                                 , battleLog = finalLog
                                                 , selectedScoreType = Nothing  -- 選択状態をリセット
                                                 , dice = rolledDice  -- 新たにランダムに振られたダイス
