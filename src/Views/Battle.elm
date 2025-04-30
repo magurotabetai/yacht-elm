@@ -82,7 +82,7 @@ viewBattleLeft battle =
             ]
         , div [ class "action-buttons" ]
             [ viewButton "振り直す" RollDice (battle.remainingRerolls <= 0)
-            , viewButton "スコア決定" NoOp False
+            , viewButton "スコア決定" ConfirmScore (battle.selectedScoreType == Nothing)
             ]
         ]
 
@@ -118,28 +118,31 @@ viewScoreCard battle =
     div [ class "score-sections" ]
         [ div [ class "score-section" ]
             [ h3 [] [ text "上の部" ]
-            , viewScoreRow "エース (1)" (Maybe.map String.fromInt battle.scoreCard.aces |> Maybe.withDefault "-") Aces
-            , viewScoreRow "デュース (2)" (Maybe.map String.fromInt battle.scoreCard.twos |> Maybe.withDefault "-") Twos
-            , viewScoreRow "トリプル (3)" (Maybe.map String.fromInt battle.scoreCard.threes |> Maybe.withDefault "-") Threes
-            , viewScoreRow "フォー (4)" (Maybe.map String.fromInt battle.scoreCard.fours |> Maybe.withDefault "-") Fours
-            , viewScoreRow "フィフス (5)" (Maybe.map String.fromInt battle.scoreCard.fives |> Maybe.withDefault "-") Fives
-            , viewScoreRow "シックス (6)" (Maybe.map String.fromInt battle.scoreCard.sixes |> Maybe.withDefault "-") Sixes
+            , viewScoreRow battle "エース (1)" (Maybe.map String.fromInt battle.scoreCard.aces |> Maybe.withDefault "-") Aces
+            , viewScoreRow battle "デュース (2)" (Maybe.map String.fromInt battle.scoreCard.twos |> Maybe.withDefault "-") Twos
+            , viewScoreRow battle "トリプル (3)" (Maybe.map String.fromInt battle.scoreCard.threes |> Maybe.withDefault "-") Threes
+            , viewScoreRow battle "フォー (4)" (Maybe.map String.fromInt battle.scoreCard.fours |> Maybe.withDefault "-") Fours
+            , viewScoreRow battle "フィフス (5)" (Maybe.map String.fromInt battle.scoreCard.fives |> Maybe.withDefault "-") Fives
+            , viewScoreRow battle "シックス (6)" (Maybe.map String.fromInt battle.scoreCard.sixes |> Maybe.withDefault "-") Sixes
             ]
         , div [ class "score-section" ]
             [ h3 [] [ text "下の部" ]
-            , viewScoreRow "チョイス" (Maybe.map String.fromInt battle.scoreCard.choice |> Maybe.withDefault "-") Choice
-            , viewScoreRow "フォーカインド" (Maybe.map String.fromInt battle.scoreCard.fourOfKind |> Maybe.withDefault "-") FourOfKind
-            , viewScoreRow "フルハウス" (Maybe.map String.fromInt battle.scoreCard.fullHouse |> Maybe.withDefault "-") FullHouse
-            , viewScoreRow "Sストレート" (Maybe.map String.fromInt battle.scoreCard.smallStraight |> Maybe.withDefault "-") SmallStraight
-            , viewScoreRow "Lストレート" (Maybe.map String.fromInt battle.scoreCard.largeStraight |> Maybe.withDefault "-") LargeStraight
-            , viewScoreRow "ヨット" (Maybe.map String.fromInt battle.scoreCard.yacht |> Maybe.withDefault "-") Yacht
+            , viewScoreRow battle "チョイス" (Maybe.map String.fromInt battle.scoreCard.choice |> Maybe.withDefault "-") Choice
+            , viewScoreRow battle "フォーカインド" (Maybe.map String.fromInt battle.scoreCard.fourOfKind |> Maybe.withDefault "-") FourOfKind
+            , viewScoreRow battle "フルハウス" (Maybe.map String.fromInt battle.scoreCard.fullHouse |> Maybe.withDefault "-") FullHouse
+            , viewScoreRow battle "Sストレート" (Maybe.map String.fromInt battle.scoreCard.smallStraight |> Maybe.withDefault "-") SmallStraight
+            , viewScoreRow battle "Lストレート" (Maybe.map String.fromInt battle.scoreCard.largeStraight |> Maybe.withDefault "-") LargeStraight
+            , viewScoreRow battle "ヨット" (Maybe.map String.fromInt battle.scoreCard.yacht |> Maybe.withDefault "-") Yacht
             ]
         ]
 
 -- スコア行表示
-viewScoreRow : String -> String -> ScoreType -> Html Msg
-viewScoreRow label value scoreType =
-    div [ class "score-row", onClick (SelectScore scoreType) ]
+viewScoreRow : Battle -> String -> String -> ScoreType -> Html Msg
+viewScoreRow battle label value scoreType =
+    div
+        [ class ("score-row" ++ if battle.selectedScoreType == Just scoreType then " selected-score" else "")
+        , onClick (SelectScore scoreType)
+        ]
         [ div [ class "score-label" ] [ text label ]
         , div [ class "score-value" ] [ text value ]
         ]

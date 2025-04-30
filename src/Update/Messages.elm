@@ -25,7 +25,8 @@ type Msg
     | StartBattle
     | RollDice
     | ToggleHoldDice String  -- ダイスのIDを指定
-    | SelectScore ScoreType
+    | SelectScore ScoreType   -- スコアを選択（表示のみ）
+    | ConfirmScore            -- 選択したスコアを確定して攻撃
     | EndTurn
     | UseActiveItem String  -- アイテムIDを指定
     | FinishBattle Bool  -- 勝利したかどうか

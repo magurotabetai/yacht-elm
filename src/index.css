@@ -491,6 +491,12 @@ body {
   background-color: #4a5568;
 }
 
+.selected-score {
+  background-color: #4c51bf;
+  border: 2px solid #fff;
+  box-shadow: 0 0 8px rgba(255, 255, 255, 0.5);
+}
+
 .score-value {
   font-weight: bold;
 }

@@ -57,6 +57,7 @@ type alias Battle =
     , dice : List Dice
     , remainingRerolls : Int
     , scoreCard : ScoreCard
+    , selectedScoreType : Maybe ScoreType  -- 選択されているがまだ確定していないスコアタイプ
     , playerDamageDealt : Int
     , enemyDamageDealt : Int
     , battleLog : List String
@@ -189,6 +190,7 @@ startBattle enemy boss run =
             , dice = standardDiceSet
             , remainingRerolls = rerollCount
             , scoreCard = initScoreCard
+            , selectedScoreType = Nothing
             , playerDamageDealt = 0
             , enemyDamageDealt = 0
             , battleLog = [ enemy.name ++ "が現れた！" ]
