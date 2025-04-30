@@ -258,15 +258,15 @@ update msg model =
                                                         enemyAttackLog = battle.enemy.name ++ "の" ++ attack.name ++ "! " ++ String.fromInt attack.damage ++ "ダメージ！"
                                                     in
                                                     ( BattlePhase, enemyAttackLog :: updatedLog, updatedEnemy )
-                                                    
+
                                             -- 全てのダイスの保持状態を解除して新たに生成するための準備
-                                            preparedDice = 
+                                            preparedDice =
                                                 battle.dice
                                                     |> List.map (\dice -> { dice | held = False })
-                                                    
+
                                             -- 新しいダイスロールのジェネレーターを作成
                                             diceRollGenerator = rollMultipleDice preparedDice
-                                            
+
                                             -- 乱数シードを使ってダイスを振る
                                             ( rolledDice, newSeed ) = Random.step diceRollGenerator model.seed
 
