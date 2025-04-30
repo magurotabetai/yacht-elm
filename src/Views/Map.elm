@@ -1,175 +1,234 @@
 module Views.Map exposing (viewMap)
 
-import Html exposing (Html, div, h1, h2, p, text)
+import Html exposing (Html, div, h1, h2, p, text, button, span)
 import Html.Attributes exposing (class, style)
 import Html.Events exposing (onClick)
 import Models.Game exposing (GameState, Run)
 import Models.Map exposing (Node, getAvailableNodes)
 import Models.Types exposing (NodeType(..))
 import Update.Messages exposing (Msg(..))
-import Views.Helpers exposing (viewButton, spacer, viewBadge)
+import Views.Helpers exposing (viewButton)
 
-
+-- マップ画面全体
 viewMap : GameState -> Run -> Html Msg
 viewMap gameState run =
     div [ class "map-view" ]
-        [ h1 [] [ text ("第" ++ String.fromInt run.currentFloor ++ "階層") ]
-        , div [ class "map-status" ]
-            [ viewPlayerStatus run ]
-        , spacer 2
+        [ viewMapStatus run
         , div [ class "map-container" ]
-            [ viewMapNodes run ]
+            [ viewMapVisual run ]
         ]
 
--- プレイヤーステータス表示
-viewPlayerStatus : Run -> Html Msg
-viewPlayerStatus run =
-    div [ class "player-status" ]
-        [ div [ class "status-item" ]
-            [ div [ class "status-label" ] [ text "HP" ]
-            , div [ class "health-bar" ]
-                [ div
-                    [ class "health-fill"
-                    , style "width" (String.fromFloat (toFloat run.currentHP / toFloat run.maxHP * 100) ++ "%")
-                    ] []
-                ]
-            , div [ class "health-text" ]
-                [ text (String.fromInt run.currentHP ++ " / " ++ String.fromInt run.maxHP) ]
-            ]
-        , div [ class "status-item" ]
-            [ div [ class "status-label" ] [ text "ゴールド" ]
-            , div [ class "status-value gold" ] [ text (String.fromInt run.gold) ]
-            ]
-        , div [ class "status-item" ]
-            [ div [ class "status-label" ] [ text "勝利数" ]
-            , div [ class "status-value" ] [ text (String.fromInt run.battlesWon) ]
+-- マップ上部のステータス表示
+viewMapStatus : Run -> Html Msg
+viewMapStatus run =
+    div [ class "map-status" ]
+        [ h2 [] [ text ("フロア " ++ String.fromInt run.currentFloor) ]
+        , div [ class "player-status" ]
+            [ viewStatusItem "HP" (String.fromInt run.currentHP ++ "/" ++ String.fromInt run.maxHP) "health"
+            , viewStatusItem "ゴールド" (String.fromInt run.gold) "gold"
+            , viewStatusItem "勝利数" (String.fromInt run.battlesWon) "battles"
             ]
         ]
 
--- マップノード表示
-viewMapNodes : Run -> Html Msg
-viewMapNodes run =
+-- ステータス項目
+viewStatusItem : String -> String -> String -> Html Msg
+viewStatusItem label value valueClass =
+    div [ class "status-item" ]
+        [ div [ class "status-label" ] [ text label ]
+        , div [ class ("status-value " ++ valueClass) ] [ text value ]
+        ]
+
+-- マップの視覚表現
+viewMapVisual : Run -> Html Msg
+viewMapVisual run =
     let
-        -- 現在のフロアのノードを取得
-        currentFloor =
+        currentFloorLevel = run.currentFloor
+        currentNodeId = run.map.currentPosition.nodeId
+        
+        currentFloor = 
             run.map.floors
-                |> List.filter (\floor -> floor.level == run.currentFloor)
+                |> List.filter (\floor -> floor.level == currentFloorLevel)
                 |> List.head
                 |> Maybe.withDefault { level = 0, nodes = [], connections = [] }
-
-        -- 利用可能な（移動できる）ノードを取得
+                
         availableNodes = getAvailableNodes run.map
-
-        -- 特定のノードが利用可能かどうかをチェック
-        isNodeAvailable nodeId =
-            availableNodes
-                |> List.any (\node -> node.id == nodeId)
-
-        -- ノードとその接続を表示
-        mapElements =
-            [ div [ class "map-nodes" ]
-                (List.map (viewNode isNodeAvailable) currentFloor.nodes)
-            , div [ class "map-connections" ]
-                (List.map (viewConnection currentFloor.nodes) currentFloor.connections)
-            ]
     in
-    div [ class "map-visual" ] mapElements
+    div [ class "map-visual" ]
+        [ viewMapConnections currentFloor.connections currentFloor.nodes currentNodeId availableNodes
+        , viewMapNodes currentFloor.nodes currentNodeId availableNodes
+        ]
 
--- 個別のノード表示
-viewNode : (String -> Bool) -> Node -> Html Msg
-viewNode isAvailable node =
+-- マップのノード表示
+viewMapNodes : List Node -> String -> List Node -> Html Msg
+viewMapNodes nodes currentNodeId availableNodes =
+    let
+        isAvailable node =
+            List.any (\availNode -> availNode.id == node.id) availableNodes
+            
+        isCurrentNode node =
+            node.id == currentNodeId
+    in
+    div [ class "map-nodes" ]
+        (List.map 
+            (\node -> 
+                viewMapNode node (isCurrentNode node) (isAvailable node)
+            ) 
+            nodes
+        )
+
+-- 個別のマップノード表示
+viewMapNode : Node -> Bool -> Bool -> Html Msg
+viewMapNode node isCurrent isAvailable =
     let
         nodeTypeClass =
             case node.nodeType of
-                Battle _ -> "node-battle"
-                EliteBattle _ -> "node-elite"
-                Rest -> "node-rest"
-                Merchant -> "node-merchant"
-                Treasure -> "node-treasure"
-                Event _ -> "node-event"
-                Boss _ -> "node-boss"
-
+                Battle _ ->
+                    "node-battle"
+                    
+                EliteBattle _ ->
+                    "node-elite"
+                    
+                Rest ->
+                    "node-rest"
+                    
+                Merchant ->
+                    "node-merchant"
+                    
+                Treasure ->
+                    "node-treasure"
+                    
+                Event _ ->
+                    "node-event"
+                    
+                Boss _ ->
+                    "node-boss"
+                    
+        nodeStatusClass =
+            if isCurrent then
+                " node-current"
+            else if node.visited then
+                " node-visited"
+            else if isAvailable then
+                " node-available"
+            else
+                ""
+                
+        nodeIcon =
+            case node.nodeType of
+                Battle _ ->
+                    "⚔️"
+                    
+                EliteBattle _ ->
+                    "🔥"
+                    
+                Rest ->
+                    "🏕️"
+                    
+                Merchant ->
+                    "💰"
+                    
+                Treasure ->
+                    "💎"
+                    
+                Event _ ->
+                    "❓"
+                    
+                Boss _ ->
+                    "👑"
+                    
         nodeLabel =
             case node.nodeType of
-                Battle _ -> "戦闘"
-                EliteBattle _ -> "強敵"
-                Rest -> "休憩"
-                Merchant -> "商人"
-                Treasure -> "宝箱"
-                Event _ -> "イベント"
-                Boss _ -> "ボス"
+                Battle _ ->
+                    "戦闘"
+                    
+                EliteBattle _ ->
+                    "エリート"
+                    
+                Rest ->
+                    "休憩"
+                    
+                Merchant ->
+                    "商人"
+                    
+                Treasure ->
+                    "宝箱"
+                    
+                Event _ ->
+                    "イベント"
+                    
+                Boss _ ->
+                    "ボス"
+                    
+        position =
+            { x = node.position.x * 100 |> String.fromFloat
+            , y = node.position.y * 100 |> String.fromFloat
+            }
+            
+        clickEvent =
+            if isAvailable then
+                onClick (EnterNode node.id)
+            else
+                onClick NoOp
     in
-    div
-        [ class ("map-node " ++ nodeTypeClass)
-        , class (if node.visited then "node-visited" else "")
-        , class (if isAvailable node.id && not node.visited then "node-available" else "")
-        , style "left" (String.fromFloat (node.position.x * 100) ++ "%")
-        , style "top" (String.fromFloat (node.position.y * 100) ++ "%")
-        , onClick (if isAvailable node.id && not node.visited then EnterNode node.id else NoOp)
+    div 
+        [ class ("map-node " ++ nodeTypeClass ++ nodeStatusClass)
+        , style "left" (position.x ++ "%")
+        , style "top" (position.y ++ "%")
+        , clickEvent
         ]
-        [ div [ class "node-icon" ] [ text (getNodeIcon node.nodeType) ]
+        [ div [ class "node-icon" ] [ text nodeIcon ]
         , div [ class "node-label" ] [ text nodeLabel ]
         ]
 
--- ノード間の接続線表示
-viewConnection : List Node -> { from : String, to : String } -> Html Msg
-viewConnection nodes connection =
+-- マップのノード間接続線表示
+viewMapConnections : List { from : String, to : String } -> List Node -> String -> List Node -> Html Msg
+viewMapConnections connections nodes currentNodeId availableNodes =
     let
-        fromNode = findNodeById connection.from nodes
-        toNode = findNodeById connection.to nodes
+        isAvailablePath connection =
+            (connection.from == currentNodeId && 
+             List.any (\node -> node.id == connection.to) availableNodes)
+            
+        isVisitedPath connection =
+            List.any (\node -> node.id == connection.from && node.visited) nodes &&
+            List.any (\node -> node.id == connection.to && node.visited) nodes
+            
+        getNodePosition nodeId =
+            nodes
+                |> List.filter (\n -> n.id == nodeId)
+                |> List.head
+                |> Maybe.map .position
+                |> Maybe.withDefault { x = 0, y = 0 }
     in
-    case (fromNode, toNode) of
-        (Just from, Just to) ->
-            let
-                -- 接続線のスタイル計算（簡易的な直線）
-                x1 = from.position.x
-                y1 = from.position.y
-                x2 = to.position.x
-                y2 = to.position.y
-
-                -- CSSの変数を使って接続線の位置と角度を設定
-                lineLength = sqrt ((x2 - x1) ^ 2 + (y2 - y1) ^ 2) * 100
-                angle = atan2 (y2 - y1) (x2 - x1) * 180 / pi
-
-                lineStyle =
-                    [ style "width" (String.fromFloat lineLength ++ "px")
-                    , style "left" (String.fromFloat (x1 * 100) ++ "%")
-                    , style "top" (String.fromFloat (y1 * 100) ++ "%")
-                    , style "transform" ("rotate(" ++ String.fromFloat angle ++ "deg)")
+    div [ class "map-connections" ]
+        (List.map 
+            (\connection -> 
+                let
+                    fromPos = getNodePosition connection.from
+                    toPos = getNodePosition connection.to
+                    
+                    -- 線の角度と長さを計算
+                    dx = (toPos.x - fromPos.x) * 100
+                    dy = (toPos.y - fromPos.y) * 100
+                    length = sqrt (dx * dx + dy * dy)
+                    angle = atan2 dy dx
+                    
+                    pathClass =
+                        if isVisitedPath connection then
+                            "path-traveled"
+                        else if isAvailablePath connection then
+                            "path-available"
+                        else
+                            "path-locked"
+                in
+                div 
+                    [ class ("map-connection " ++ pathClass)
+                    , style "left" (String.fromFloat (fromPos.x * 100) ++ "%")
+                    , style "top" (String.fromFloat (fromPos.y * 100) ++ "%")
+                    , style "width" (String.fromFloat length ++ "%")
+                    , style "transform" ("rotate(" ++ String.fromFloat (angle * 180 / pi) ++ "deg)")
                     , style "transform-origin" "0 0"
                     ]
-
-                -- ノードの状態に基づいて線のクラスを変更
-                pathClass =
-                    if from.visited && to.visited then
-                        "path-traveled"
-                    else if from.visited then
-                        "path-available"
-                    else
-                        "path-locked"
-            in
-            div
-                (class ("map-connection " ++ pathClass) :: lineStyle)
-                []
-
-        _ ->
-            text "" -- ノードが見つからない場合は何も表示しない
-
--- ヘルパー関数: ノードIDからノードを検索
-findNodeById : String -> List Node -> Maybe Node
-findNodeById id nodes =
-    nodes
-        |> List.filter (\node -> node.id == id)
-        |> List.head
-
--- ノードタイプに応じたアイコン文字を返す
-getNodeIcon : NodeType -> String
-getNodeIcon nodeType =
-    case nodeType of
-        Battle _ -> "⚔️"
-        EliteBattle _ -> "🔥"
-        Rest -> "🏕️"
-        Merchant -> "💰"
-        Treasure -> "🎁"
-        Event _ -> "❓"
-        Boss _ -> "👑"
+                    []
+            )
+            connections
+        )

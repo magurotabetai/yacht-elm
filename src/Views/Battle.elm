@@ -1,195 +1,161 @@
 module Views.Battle exposing (viewBattle)
 
-import Html exposing (Html, div, h1, h2, h3, p, span, text)
-import Html.Attributes exposing (class, classList)
+import Html exposing (Html, div, h1, h2, h3, p, text, button, span)
+import Html.Attributes exposing (class, style)
 import Html.Events exposing (onClick)
-import Models.Dice exposing (Dice)
 import Models.Game exposing (GameState, Run, Battle)
-import Models.Score exposing (ScoreCard)
-import Models.Types exposing (ScoreType(..))
+import Models.Types exposing (ScoreType(..), EnemyData, BossData)
 import Update.Messages exposing (Msg(..))
-import Views.Helpers exposing (viewButton, viewCard, viewBadge, spacer)
+import Views.Helpers exposing (viewButton, spacer, viewBadge)
 
-
+-- バトル画面の表示
 viewBattle : GameState -> Run -> Battle -> Html Msg
 viewBattle gameState run battle =
     div [ class "battle-screen" ]
-        [ div [ class "battle-header" ]
-            [ viewEnemyInfo battle
-            , viewPlayerInfo run
-            ]
+        [ viewBattleHeader battle.enemy battle.boss
         , div [ class "battle-main" ]
-            [ div [ class "battle-left" ]
-                [ viewDiceArea battle
-                , viewActionButtons battle
-                ]
-            , div [ class "battle-right" ]
-                [ viewScoreCard battle
-                ]
+            [ viewBattleLeft battle
+            , viewBattleRight battle
             ]
-        , div [ class "battle-footer" ]
-            [ viewBattleLog battle
-            ]
+        , viewBattleFooter battle.battleLog
         ]
 
--- 敵情報の表示
-viewEnemyInfo : Battle -> Html Msg
-viewEnemyInfo battle =
-    let
-        enemy = battle.enemy
-        isBossBattle = battle.boss /= Nothing
-    in
+-- バトルヘッダー（敵情報と自分の情報）
+viewBattleHeader : EnemyData -> Maybe BossData -> Html Msg
+viewBattleHeader enemy boss =
+    div [ class "battle-header" ]
+        [ viewEnemyInfo enemy boss
+        , viewPlayerInfo
+        ]
+
+-- 敵の情報表示
+viewEnemyInfo : EnemyData -> Maybe BossData -> Html Msg
+viewEnemyInfo enemy boss =
     div [ class "enemy-info" ]
         [ div [ class "enemy-header" ]
-            [ h2 [] [ text enemy.name ]
-            , if isBossBattle then
-                viewBadge "boss" "ボス"
-              else
-                text ""
-            ]
-        , div [ class "enemy-health" ]
-            [ div [ class "health-bar" ]
-                [ div
-                    [ class "health-fill"
-                    , Html.Attributes.style "width" (String.fromFloat (toFloat enemy.hp / toFloat enemy.maxHp * 100) ++ "%")
-                    ]
-                    []
+            [ h2 [] 
+                [ text enemy.name
+                , if boss /= Nothing then viewBadge "boss" "ボス" else text "" 
                 ]
-            , div [ class "health-text" ]
-                [ text (String.fromInt enemy.hp ++ " / " ++ String.fromInt enemy.maxHp) ]
             ]
+        , div [ class "health-bar" ]
+            [ div 
+                [ class "health-fill"
+                , style "width" (String.fromFloat (toFloat enemy.hp / toFloat enemy.maxHp * 100) ++ "%")
+                ] 
+                []
+            ]
+        , div [ class "health-text" ]
+            [ text (String.fromInt enemy.hp ++ " / " ++ String.fromInt enemy.maxHp) ]
         , div [ class "enemy-attacks" ]
-            (List.map
-                (\attack ->
-                    div [ class "attack-info" ]
-                        [ span [ class "attack-name" ] [ text attack.name ]
-                        , span [ class "attack-damage" ] [ text ("攻撃力: " ++ String.fromInt attack.damage) ]
-                        ]
-                )
-                enemy.attacks
-            )
+            (List.map viewEnemyAttack enemy.attacks)
         ]
 
--- プレイヤー情報の表示
-viewPlayerInfo : Run -> Html Msg
-viewPlayerInfo run =
+-- 敵の攻撃情報表示
+viewEnemyAttack : { name : String, damage : Int, description : String } -> Html Msg
+viewEnemyAttack attack =
+    div [ class "attack-info" ]
+        [ span [ class "attack-name" ] [ text attack.name ]
+        , span [] [ text (String.fromInt attack.damage ++ "ダメージ") ]
+        ]
+
+-- プレイヤー情報表示
+viewPlayerInfo : Html Msg
+viewPlayerInfo =
     div [ class "player-info" ]
-        [ div [ class "player-health" ]
-            [ div [ class "health-bar" ]
-                [ div
-                    [ class "health-fill"
-                    , Html.Attributes.style "width" (String.fromFloat (toFloat run.currentHP / toFloat run.maxHP * 100) ++ "%")
-                    ]
-                    []
-                ]
-            , div [ class "health-text" ]
-                [ text (String.fromInt run.currentHP ++ " / " ++ String.fromInt run.maxHP) ]
-            ]
-        , div [ class "player-stats" ]
-            [ div [ class "gold-info" ]
-                [ span [ class "gold-icon" ] [ text "💰" ]
-                , text (String.fromInt run.gold)
-                ]
+        [ div [ class "gold-info" ]
+            [ span [ class "gold-icon" ] [ text "💰" ]
+            , span [] [ text "100" ]
             ]
         ]
 
--- ダイスエリアの表示
-viewDiceArea : Battle -> Html Msg
-viewDiceArea battle =
-    div [ class "dice-area" ]
-        [ h3 [] [ text "ダイス" ]
-        , div [ class "dice-container" ]
-            (List.map viewDice battle.dice)
-        , div [ class "rerolls-info" ]
-            [ text ("残りリロール回数: " ++ String.fromInt battle.remainingRerolls) ]
+-- バトルの左側エリア（ダイス、アクションエリア）
+viewBattleLeft : Battle -> Html Msg
+viewBattleLeft battle =
+    div [ class "battle-left" ]
+        [ div [ class "dice-area" ]
+            [ h3 [] [ text "ダイス" ]
+            , div [ class "dice-container" ]
+                (List.map viewDice battle.dice)
+            , div [ class "rerolls-info" ]
+                [ text ("残りリロール: " ++ String.fromInt battle.remainingRerolls ++ " / 2") ]
+            ]
+        , div [ class "action-buttons" ]
+            [ viewButton "reroll" "振り直す" (battle.remainingRerolls > 0) RollDice
+            , viewButton "confirm" "スコア決定" True NoOp
+            ]
         ]
 
--- ダイスの表示
-viewDice : Dice -> Html Msg
+-- ダイス表示
+viewDice : { id : String, value : Int, held : Bool, diceType : a, effects : b } -> Html Msg
 viewDice dice =
-    let
-        diceClass =
-            case dice.diceType of
-                Models.Types.Normal -> "dice-normal"
-                Models.Types.Fire -> "dice-fire"
-                Models.Types.Ice -> "dice-ice"
-                Models.Types.Thunder -> "dice-thunder"
-                Models.Types.Cursed -> "dice-cursed"
-                Models.Types.Rare -> "dice-rare"
-    in
-    div
-        [ classList
-            [ ("dice", True)
-            , (diceClass, True)
-            , ("dice-held", dice.held)
-            ]
+    div 
+        [ class ("dice dice-normal" ++ if dice.held then " dice-held" else "")
         , onClick (ToggleHoldDice dice.id)
         ]
-        [ div [ class "dice-value" ] [ text (String.fromInt dice.value) ]
+        [ text (String.fromInt dice.value) ]
+
+-- バトルの右側エリア（スコアカード、アイテムエリア）
+viewBattleRight : Battle -> Html Msg
+viewBattleRight battle =
+    div [ class "battle-right" ]
+        [ div [ class "card" ]
+            [ div [ class "card-header" ] [ text "スコアカード" ]
+            , div [ class "card-content" ]
+                [ viewScoreCard battle ]
+            ]
+        , spacer 3
+        , div [ class "card" ]
+            [ div [ class "card-header" ] [ text "アイテム" ]
+            , div [ class "card-content" ]
+                [ text "実装予定" ]
+            ]
         ]
 
--- アクションボタンの表示
-viewActionButtons : Battle -> Html Msg
-viewActionButtons battle =
-    div [ class "action-buttons" ]
-        [ viewButton "ダイスを振る" RollDice (battle.remainingRerolls <= 0)
-        , viewButton "ターン終了" EndTurn False
-        ]
-
--- スコアカードの表示
+-- スコアカード表示
 viewScoreCard : Battle -> Html Msg
 viewScoreCard battle =
-    let
-        scoreCard = battle.scoreCard
-    in
-    viewCard "スコアカード"
-        [ div [ class "score-sections" ]
-            [ div [ class "score-section upper" ]
-                [ h3 [] [ text "上段" ]
-                , viewScoreRow "エース (1)" Aces scoreCard.aces
-                , viewScoreRow "デュース (2)" Twos scoreCard.twos
-                , viewScoreRow "トリプル (3)" Threes scoreCard.threes
-                , viewScoreRow "フォー (4)" Fours scoreCard.fours
-                , viewScoreRow "フィフス (5)" Fives scoreCard.fives
-                , viewScoreRow "シックス (6)" Sixes scoreCard.sixes
-                ]
-            , div [ class "score-section lower" ]
-                [ h3 [] [ text "下段" ]
-                , viewScoreRow "チョイス" Choice scoreCard.choice
-                , viewScoreRow "フォーカインド" FourOfKind scoreCard.fourOfKind
-                , viewScoreRow "フルハウス" FullHouse scoreCard.fullHouse
-                , viewScoreRow "Sストレート" SmallStraight scoreCard.smallStraight
-                , viewScoreRow "Lストレート" LargeStraight scoreCard.largeStraight
-                , viewScoreRow "ヨット" Yacht scoreCard.yacht
-                ]
+    div [ class "score-sections" ]
+        [ div [ class "score-section" ]
+            [ h3 [] [ text "上の部" ]
+            , viewScoreRow "エース (1)" (Maybe.map String.fromInt battle.scoreCard.aces |> Maybe.withDefault "-") Aces
+            , viewScoreRow "デュース (2)" (Maybe.map String.fromInt battle.scoreCard.twos |> Maybe.withDefault "-") Twos
+            , viewScoreRow "トリプル (3)" (Maybe.map String.fromInt battle.scoreCard.threes |> Maybe.withDefault "-") Threes
+            , viewScoreRow "フォー (4)" (Maybe.map String.fromInt battle.scoreCard.fours |> Maybe.withDefault "-") Fours
+            , viewScoreRow "フィフス (5)" (Maybe.map String.fromInt battle.scoreCard.fives |> Maybe.withDefault "-") Fives
+            , viewScoreRow "シックス (6)" (Maybe.map String.fromInt battle.scoreCard.sixes |> Maybe.withDefault "-") Sixes
+            ]
+        , div [ class "score-section" ]
+            [ h3 [] [ text "下の部" ]
+            , viewScoreRow "チョイス" (Maybe.map String.fromInt battle.scoreCard.choice |> Maybe.withDefault "-") Choice
+            , viewScoreRow "フォーカインド" (Maybe.map String.fromInt battle.scoreCard.fourOfKind |> Maybe.withDefault "-") FourOfKind
+            , viewScoreRow "フルハウス" (Maybe.map String.fromInt battle.scoreCard.fullHouse |> Maybe.withDefault "-") FullHouse
+            , viewScoreRow "Sストレート" (Maybe.map String.fromInt battle.scoreCard.smallStraight |> Maybe.withDefault "-") SmallStraight
+            , viewScoreRow "Lストレート" (Maybe.map String.fromInt battle.scoreCard.largeStraight |> Maybe.withDefault "-") LargeStraight
+            , viewScoreRow "ヨット" (Maybe.map String.fromInt battle.scoreCard.yacht |> Maybe.withDefault "-") Yacht
             ]
         ]
 
--- スコア行の表示
-viewScoreRow : String -> ScoreType -> Maybe Int -> Html Msg
-viewScoreRow label scoreType maybeScore =
-    div
-        [ class "score-row"
-        , onClick (SelectScore scoreType)
-        ]
+-- スコア行表示
+viewScoreRow : String -> String -> ScoreType -> Html Msg
+viewScoreRow label value scoreType =
+    div [ class "score-row", onClick (SelectScore scoreType) ]
         [ div [ class "score-label" ] [ text label ]
-        , div [ class "score-value" ]
-            [ text
-                (case maybeScore of
-                    Just score -> String.fromInt score
-                    Nothing -> "-"
-                )
+        , div [ class "score-value" ] [ text value ]
+        ]
+
+-- バトルフッター（バトルログエリア）
+viewBattleFooter : List String -> Html Msg
+viewBattleFooter logs =
+    div [ class "battle-footer" ]
+        [ div [ class "battle-log" ]
+            [ h3 [] [ text "バトルログ" ]
+            , div [ class "log-entries" ]
+                (List.map viewLogEntry (List.take 5 logs))
             ]
         ]
 
--- バトルログの表示
-viewBattleLog : Battle -> Html Msg
-viewBattleLog battle =
-    div [ class "battle-log" ]
-        [ h3 [] [ text "バトルログ" ]
-        , div [ class "log-entries" ]
-            (List.map
-                (\entry -> div [ class "log-entry" ] [ text entry ])
-                (List.reverse battle.battleLog)
-            )
-        ]
+-- ログエントリー表示
+viewLogEntry : String -> Html Msg
+viewLogEntry log =
+    div [ class "log-entry" ] [ text log ]

@@ -21,7 +21,7 @@ type DiceEffect
 -- スコア関連の型定義
 type ScoreType
     = Aces
-    | Twos
+    | Twos 
     | Threes
     | Fours
     | Fives
@@ -74,13 +74,59 @@ type UnlockCondition
 
 -- マップ関連の型定義
 type NodeType
-    = Battle Enemy
-    | EliteBattle Enemy
+    = Battle EnemyData
+    | EliteBattle EnemyData
     | Rest
     | Merchant
     | Treasure
     | Event EventType
-    | Boss Boss
+    | Boss BossData
+
+-- 敵の基本データ型
+type alias EnemyData =
+    { id : String
+    , name : String
+    , hp : Int
+    , maxHp : Int
+    , attacks : List AttackData
+    , scoreBonus : List ScoreBonus
+    , rewards : List RewardData
+    }
+
+-- ボスの基本データ型
+type alias BossData =
+    { enemy : EnemyData
+    , specialPhases : List BossPhase
+    }
+
+-- 攻撃データ型
+type alias AttackData =
+    { name : String
+    , damage : Int
+    , description : String
+    }
+
+-- 報酬データ型
+type alias RewardData =
+    { gold : Int
+    , experience : Int
+    , items : List String
+    }
+
+-- ボスの特殊フェーズ
+type alias BossPhase =
+    { hpThreshold : Int
+    , description : String
+    , effect : BossEffect
+    }
+
+-- ボスの特殊効果
+type BossEffect
+    = LockDice Int
+    | DisableReroll
+    | DoubleAttack
+    | HealSelf Int
+    | SummonMinions
 
 type EventType
     = RandomReward

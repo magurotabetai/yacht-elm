@@ -42,52 +42,6 @@ type alias Position =
     , y : Float
     }
 
--- 敵の定義
-type alias Enemy =
-    { id : String
-    , name : String
-    , hp : Int
-    , maxHp : Int
-    , attacks : List Attack
-    , scoreBonus : List ScoreBonus
-    , rewards : List Reward
-    }
-
--- 攻撃の定義
-type alias Attack =
-    { name : String
-    , damage : Int
-    , description : String
-    }
-
--- 報酬の定義
-type alias Reward =
-    { gold : Int
-    , experience : Int
-    , items : List String
-    }
-
--- ボスの定義
-type alias Boss =
-    { enemy : Enemy
-    , specialPhases : List BossPhase
-    }
-
--- ボスの特殊フェーズ
-type alias BossPhase =
-    { hpThreshold : Int
-    , description : String
-    , effect : BossEffect
-    }
-
--- ボスの特殊効果
-type BossEffect
-    = LockDice Int
-    | DisableReroll
-    | DoubleAttack
-    | HealSelf Int
-    | SummonMinions
-
 -- 初期マップを生成
 initMap : Generator Map
 initMap =
@@ -95,7 +49,7 @@ initMap =
         -- 最初のフロアを生成
         firstFloor =
             { level = 1
-            , nodes =
+            , nodes = 
                 [ { id = "start", nodeType = Rest, position = { x = 0.5, y = 0.1 }, visited = True }
                 , { id = "battle-1", nodeType = Battle (createBasicEnemy "goblin" "ゴブリン"), position = { x = 0.3, y = 0.3 }, visited = False }
                 , { id = "battle-2", nodeType = Battle (createBasicEnemy "wolf" "ウルフ"), position = { x = 0.7, y = 0.3 }, visited = False }
@@ -130,17 +84,17 @@ initMap =
     Random.constant initialMap
 
 -- 基本的な敵を作成するヘルパー関数
-createBasicEnemy : String -> String -> Enemy
+createBasicEnemy : String -> String -> EnemyData
 createBasicEnemy id name =
     { id = id
     , name = name
     , hp = 10
     , maxHp = 10
-    , attacks =
+    , attacks = 
         [ { name = "通常攻撃", damage = 2, description = "基本的な攻撃" }
         ]
     , scoreBonus = []
-    , rewards =
+    , rewards = 
         [ { gold = 5
           , experience = 10
           , items = []
@@ -149,20 +103,20 @@ createBasicEnemy id name =
     }
 
 -- エリート敵を作成するヘルパー関数
-createEliteEnemy : String -> String -> Enemy
+createEliteEnemy : String -> String -> EnemyData
 createEliteEnemy id name =
     { id = id
     , name = name
     , hp = 20
     , maxHp = 20
-    , attacks =
+    , attacks = 
         [ { name = "強力な一撃", damage = 4, description = "通常より強力な攻撃" }
         , { name = "連続攻撃", damage = 2, description = "2回連続で攻撃" }
         ]
-    , scoreBonus =
-        [ BonusType FourOfKind 5
+    , scoreBonus = 
+        [ BonusType FourOfKind 5 
         ]
-    , rewards =
+    , rewards = 
         [ { gold = 15
           , experience = 30
           , items = [ "random_common" ]
@@ -171,30 +125,30 @@ createEliteEnemy id name =
     }
 
 -- ボスを作成するヘルパー関数
-createBoss : String -> String -> Boss
+createBoss : String -> String -> BossData
 createBoss id name =
-    { enemy =
+    { enemy = 
         { id = id
         , name = name
         , hp = 50
         , maxHp = 50
-        , attacks =
+        , attacks = 
             [ { name = "火炎ブレス", damage = 6, description = "広範囲に及ぶ強力な攻撃" }
             , { name = "鋭い爪", damage = 3, description = "素早い連続攻撃" }
             , { name = "尻尾薙ぎ払い", damage = 4, description = "広範囲に中程度のダメージ" }
             ]
-        , scoreBonus =
+        , scoreBonus = 
             [ BonusType Yacht 10
             , BonusType LargeStraight 5
             ]
-        , rewards =
+        , rewards = 
             [ { gold = 50
               , experience = 100
               , items = [ "rare_item", "next_floor_key" ]
               }
             ]
         }
-    , specialPhases =
+    , specialPhases = 
         [ { hpThreshold = 25
           , description = "ドラゴンが怒りに震え、炎が激しく燃え上がる！"
           , effect = DoubleAttack
@@ -208,18 +162,18 @@ getAvailableNodes map =
     let
         currentFloorLevel = map.currentPosition.floorLevel
         currentNodeId = map.currentPosition.nodeId
-
-        currentFloor =
+        
+        currentFloor = 
             map.floors
                 |> List.filter (\floor -> floor.level == currentFloorLevel)
                 |> List.head
                 |> Maybe.withDefault { level = 0, nodes = [], connections = [] }
-
+                
         connectedNodeIds =
             currentFloor.connections
                 |> List.filter (\conn -> conn.from == currentNodeId)
                 |> List.map .to
-
+                
         connectedNodes =
             currentFloor.nodes
                 |> List.filter (\node -> List.member node.id connectedNodeIds && not node.visited)
@@ -231,17 +185,17 @@ moveToNode : String -> Map -> Map
 moveToNode nodeId map =
     let
         currentFloorLevel = map.currentPosition.floorLevel
-
+        
         updatedFloors =
             map.floors
-                |> List.map
-                    (\floor ->
+                |> List.map 
+                    (\floor -> 
                         if floor.level == currentFloorLevel then
-                            { floor |
-                                nodes =
+                            { floor | 
+                                nodes = 
                                     floor.nodes
-                                        |> List.map
-                                            (\node ->
+                                        |> List.map 
+                                            (\node -> 
                                                 if node.id == nodeId then
                                                     { node | visited = True }
                                                 else
@@ -252,7 +206,7 @@ moveToNode nodeId map =
                             floor
                     )
     in
-    { map
+    { map 
     | floors = updatedFloors
     , currentPosition = { floorLevel = currentFloorLevel, nodeId = nodeId }
     }
@@ -261,13 +215,13 @@ moveToNode nodeId map =
 addNextFloor : Map -> Generator Map
 addNextFloor map =
     let
-        nextLevel =
+        nextLevel = 
             map.floors
                 |> List.map .level
                 |> List.maximum
                 |> Maybe.withDefault 0
                 |> (+) 1
-
+                
         -- 次のフロアのノード数を決定
         nodeCount = nextLevel * 3 + 5
     in
@@ -284,7 +238,7 @@ generateFloor level nodeCount =
     -- 簡潔にするため、現時点では固定パターンを返す
     Random.constant
         { level = level
-        , nodes =
+        , nodes = 
             [ { id = "start-" ++ String.fromInt level, nodeType = Rest, position = { x = 0.5, y = 0.1 }, visited = True }
             , { id = "boss-" ++ String.fromInt level, nodeType = Boss (createBoss ("boss-" ++ String.fromInt level) ("レベル" ++ String.fromInt level ++ "ボス")), position = { x = 0.5, y = 0.9 }, visited = False }
             ]

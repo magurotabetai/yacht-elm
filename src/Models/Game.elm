@@ -2,7 +2,7 @@ module Models.Game exposing (..)
 
 import Models.Character exposing (Character, Item, availableCharacters)
 import Models.Dice exposing (Dice, standardDiceSet)
-import Models.Map exposing (Map, Enemy, Boss)
+import Models.Map exposing (Map)
 import Models.Score exposing (ScoreCard, initScoreCard)
 import Models.Types exposing (..)
 import Random
@@ -51,8 +51,8 @@ type alias Inventory =
     }
 
 type alias Battle =
-    { enemy : Enemy
-    , boss : Maybe Boss
+    { enemy : EnemyData
+    , boss : Maybe BossData
     , turn : Int
     , dice : List Dice
     , remainingRerolls : Int
@@ -107,7 +107,7 @@ initGameState initialSeed =
         { id = "player-" ++ String.fromInt initialSeed
         , name = "プレイヤー"
         , selectedCharacter = Nothing
-        , stats =
+        , stats = 
             { totalRuns = 0
             , bossesDefeated = []
             , highScore = 0
@@ -115,7 +115,7 @@ initGameState initialSeed =
             }
         }
     , currentRun = Nothing
-    , unlockedContent =
+    , unlockedContent = 
         { characters = availableCharacters
         , items = []
         , specialDice = []
@@ -130,18 +130,18 @@ initGameState initialSeed =
 startNewRun : Character -> GameState -> ( GameState, Cmd msg )
 startNewRun character gameState =
     let
-        ( randomSeed, nextSeed ) =
+        ( randomSeed, nextSeed ) = 
             Random.step (Random.int 1 999999) gameState.seed
-
+            
         ( initialMap, newSeed ) =
             Random.step Models.Map.initMap nextSeed
-
+            
         newRun =
             { id = "run-" ++ String.fromInt randomSeed
             , seed = randomSeed
             , currentFloor = 1
             , map = initialMap
-            , inventory =
+            , inventory = 
                 { items = character.startingItems
                 , activeItemSlots = []
                 }
@@ -152,19 +152,19 @@ startNewRun character gameState =
             , currentBattle = Nothing
             , characterId = character.id
             }
-
+            
         updatedPlayer =
             { id = gameState.player.id
             , name = gameState.player.name
             , selectedCharacter = Just character
-            , stats =
+            , stats = 
                 { totalRuns = gameState.player.stats.totalRuns + 1
                 , bossesDefeated = gameState.player.stats.bossesDefeated
                 , highScore = gameState.player.stats.highScore
                 , totalGold = gameState.player.stats.totalGold
                 }
             }
-
+            
         updatedGameState =
             { gameState
             | player = updatedPlayer
@@ -176,12 +176,12 @@ startNewRun character gameState =
     ( updatedGameState, Cmd.none )
 
 -- バトルを開始
-startBattle : Enemy -> Maybe Boss -> Run -> ( Run, Cmd msg )
+startBattle : EnemyData -> Maybe BossData -> Run -> ( Run, Cmd msg )
 startBattle enemy boss run =
     let
         -- キャラクターに基づいてリロール回数を決定（デフォルトは2回）
         rerollCount = 2
-
+        
         initialBattle =
             { enemy = enemy
             , boss = boss
@@ -193,7 +193,7 @@ startBattle enemy boss run =
             , enemyDamageDealt = 0
             , battleLog = [ enemy.name ++ "が現れた！" ]
             }
-
+            
         updatedRun =
             { run | currentBattle = Just initialBattle }
     in
@@ -202,7 +202,7 @@ startBattle enemy boss run =
 -- デフォルト設定
 defaultSettings : Settings
 defaultSettings =
-    { audio =
+    { audio = 
         { musicVolume = 0.7
         , sfxVolume = 0.8
         , masterVolume = 0.8
@@ -212,12 +212,12 @@ defaultSettings =
         , fullscreen = False
         , effectQuality = "Medium"
         }
-    , gameplay =
+    , gameplay = 
         { autosave = True
         , difficultyLevel = "Normal"
         , tutorialEnabled = True
         }
-    , accessibility =
+    , accessibility = 
         { colorblindMode = False
         , textSize = "Medium"
         , highContrast = False
