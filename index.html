@@ -6864,9 +6864,9 @@ var $author$project$Models$Map$createBasicEnemy = F2(
 					{damage: 1, description: '弱い攻撃', name: '通常攻撃'},
 					{damage: 0, description: '何も起こらない', name: '威嚇'}
 				]),
-			hp: 10,
+			hp: 100,
 			id: id,
-			maxHp: 10,
+			maxHp: 100,
 			name: name,
 			rewards: _List_fromArray(
 				[
@@ -6890,9 +6890,9 @@ var $author$project$Models$Map$createBoss = F2(
 						{damage: 4, description: '強力な範囲攻撃', name: '怒りの咆哮'},
 						{damage: 1, description: '全体に弱いダメージ', name: '地響き'}
 					]),
-				hp: 40,
+				hp: 400,
 				id: id,
-				maxHp: 40,
+				maxHp: 400,
 				name: name + ' (ボス)',
 				rewards: _List_fromArray(
 					[
@@ -6927,9 +6927,9 @@ var $author$project$Models$Map$createEliteEnemy = F2(
 					{damage: 1, description: '2回攻撃する', name: '連撃'},
 					{damage: 3, description: '強力な特殊攻撃', name: '特殊能力'}
 				]),
-			hp: 20,
+			hp: 200,
 			id: id,
-			maxHp: 20,
+			maxHp: 200,
 			name: name + ' (エリート)',
 			rewards: _List_fromArray(
 				[
@@ -7337,7 +7337,19 @@ var $author$project$Update$Update$update = F2(
 									$elm$core$List$cons,
 									'プレイヤーは ' + ($elm$core$String$fromInt(scoreDamage) + ' ダメージを与えた！'),
 									battle.battleLog);
-								var _v19 = function () {
+								var preparedDice = A2(
+									$elm$core$List$map,
+									function (dice) {
+										return _Utils_update(
+											dice,
+											{held: false});
+									},
+									battle.dice);
+								var diceRollGenerator = $author$project$Models$Dice$rollMultipleDice(preparedDice);
+								var _v19 = A2($elm$random$Random$step, diceRollGenerator, model.seed);
+								var rolledDice = _v19.a;
+								var newSeed = _v19.b;
+								var _v20 = function () {
 									if (updatedEnemy.hp <= 0) {
 										return _Utils_Tuple3(
 											$author$project$Models$Types$InRun,
@@ -7362,12 +7374,12 @@ var $author$project$Update$Update$update = F2(
 											updatedEnemy);
 									}
 								}();
-								var gamePhase = _v19.a;
-								var finalLog = _v19.b;
-								var finalEnemy = _v19.c;
+								var gamePhase = _v20.a;
+								var finalLog = _v20.b;
+								var finalEnemy = _v20.c;
 								var updatedBattle = _Utils_update(
 									battle,
-									{battleLog: finalLog, enemy: finalEnemy, remainingRerolls: 2, scoreHistory: updatedScoreHistory, selectedScoreType: $elm$core$Maybe$Nothing, turn: battle.turn + 1});
+									{battleLog: finalLog, dice: rolledDice, enemy: finalEnemy, remainingRerolls: 2, scoreHistory: updatedScoreHistory, selectedScoreType: $elm$core$Maybe$Nothing, turn: battle.turn + 1});
 								var updatedRun = _Utils_eq(gamePhase, $author$project$Models$Types$InRun) ? _Utils_update(
 									run,
 									{battlesWon: run.battlesWon + 1, currentBattle: $elm$core$Maybe$Nothing, gold: run.gold + 10}) : _Utils_update(
@@ -7380,7 +7392,8 @@ var $author$project$Update$Update$update = F2(
 										model,
 										{
 											currentRun: $elm$core$Maybe$Just(updatedRun),
-											gamePhase: gamePhase
+											gamePhase: gamePhase,
+											seed: newSeed
 										}),
 									$elm$core$Platform$Cmd$none);
 							} else {
