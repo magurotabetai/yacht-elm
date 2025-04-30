@@ -6,6 +6,7 @@ import Models.Dice exposing (rollMultipleDice, toggleHold)
 import Models.Game exposing (GameState, Run, Battle, initGameState, startNewRun, startBattle)
 import Models.Map exposing (moveToNode, getAvailableNodes)
 import Models.Score exposing (calculatePossibleScores, ScoreCard)
+import Models.Score.DamageCalculator exposing (calculateDamageFromScore)
 import Models.Types exposing (GamePhase(..), NodeType(..), ScoreType(..), EnemyData, BossData, AttackData)
 import Random
 import Task
@@ -335,57 +336,6 @@ getCurrentNodeEnemy run =
 
         Nothing ->
             Nothing
-
--- ヘルパー関数：スコア値からダメージを計算
-calculateDamageFromScore : ScoreType -> ScoreCard -> Int
-calculateDamageFromScore scoreType scoreCard =
-    let
-        -- スコアタイプに応じた値を取得
-        scoreValue = 
-            case scoreType of
-                Aces -> Maybe.withDefault 0 scoreCard.aces
-                Twos -> Maybe.withDefault 0 scoreCard.twos
-                Threes -> Maybe.withDefault 0 scoreCard.threes
-                Fours -> Maybe.withDefault 0 scoreCard.fours
-                Fives -> Maybe.withDefault 0 scoreCard.fives
-                Sixes -> Maybe.withDefault 0 scoreCard.sixes
-                Choice -> Maybe.withDefault 0 scoreCard.choice
-                FourOfKind -> Maybe.withDefault 0 scoreCard.fourOfKind
-                FullHouse -> Maybe.withDefault 0 scoreCard.fullHouse
-                SmallStraight -> Maybe.withDefault 0 scoreCard.smallStraight
-                LargeStraight -> Maybe.withDefault 0 scoreCard.largeStraight
-                Yacht -> Maybe.withDefault 0 scoreCard.yacht
-                Special name -> 
-                    -- 特殊スコアは対応する specialScores から取得
-                    scoreCard.specialScores
-                        |> List.filter (\s -> s.scoreType == name)
-                        |> List.head
-                        |> Maybe.andThen .value
-                        |> Maybe.withDefault 0
-        
-        -- スコアタイプに応じた倍率
-        multiplier =
-            case scoreType of
-                -- 上の部は基本通り
-                Aces -> 1.0
-                Twos -> 1.0
-                Threes -> 1.0
-                Fours -> 1.0
-                Fives -> 1.0
-                Sixes -> 1.0
-                -- 下の部は倍率が高い
-                Choice -> 1.0
-                FourOfKind -> 1.4    -- フォーカインド 1.4倍
-                FullHouse -> 1.6     -- フルハウス 1.6倍
-                SmallStraight -> 1.2 -- Sストレート 1.2倍
-                LargeStraight -> 1.8 -- Lストレート 1.8倍
-                Yacht -> 2.0         -- ヨット 2.0倍
-                Special _ -> 1.0     -- 特殊スコアは基本倍率
-        
-        -- 倍率を適用したダメージ計算
-        finalDamage = round (toFloat scoreValue * multiplier)
-    in
-    max 1 finalDamage  -- 最低でも1ダメージは保証
 
 -- ノード進入時の処理
 handleNodeEntry : String -> Run -> Random.Seed -> ( GamePhase, ( Cmd Msg, Random.Seed ) )

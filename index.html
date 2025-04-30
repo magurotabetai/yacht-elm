@@ -6058,7 +6058,42 @@ var $elm$core$List$head = function (list) {
 		return $elm$core$Maybe$Nothing;
 	}
 };
-var $elm$core$Basics$round = _Basics_round;
+var $elm$core$Maybe$map = F2(
+	function (f, maybe) {
+		if (maybe.$ === 'Just') {
+			var value = maybe.a;
+			return $elm$core$Maybe$Just(
+				f(value));
+		} else {
+			return $elm$core$Maybe$Nothing;
+		}
+	});
+var $author$project$Models$Types$Aces = {$: 'Aces'};
+var $author$project$Models$Types$Choice = {$: 'Choice'};
+var $author$project$Models$Types$Fives = {$: 'Fives'};
+var $author$project$Models$Types$FourOfKind = {$: 'FourOfKind'};
+var $author$project$Models$Types$Fours = {$: 'Fours'};
+var $author$project$Models$Types$FullHouse = {$: 'FullHouse'};
+var $author$project$Models$Types$LargeStraight = {$: 'LargeStraight'};
+var $author$project$Models$Types$Sixes = {$: 'Sixes'};
+var $author$project$Models$Types$Threes = {$: 'Threes'};
+var $author$project$Models$Types$Twos = {$: 'Twos'};
+var $author$project$Models$Types$Yacht = {$: 'Yacht'};
+var $author$project$Models$Score$DamageCalculator$scoreMultipliers = _List_fromArray(
+	[
+		{description: '基本ダメージ', multiplier: 1.0, scoreType: $author$project$Models$Types$Aces},
+		{description: '基本ダメージ', multiplier: 1.0, scoreType: $author$project$Models$Types$Twos},
+		{description: '基本ダメージ', multiplier: 1.0, scoreType: $author$project$Models$Types$Threes},
+		{description: '基本ダメージ', multiplier: 1.0, scoreType: $author$project$Models$Types$Fours},
+		{description: '基本ダメージ', multiplier: 1.0, scoreType: $author$project$Models$Types$Fives},
+		{description: '基本ダメージ', multiplier: 1.0, scoreType: $author$project$Models$Types$Sixes},
+		{description: '基本ダメージ', multiplier: 1.0, scoreType: $author$project$Models$Types$Choice},
+		{description: '中程度ボーナス', multiplier: 1.4, scoreType: $author$project$Models$Types$FourOfKind},
+		{description: '大きめボーナス', multiplier: 1.6, scoreType: $author$project$Models$Types$FullHouse},
+		{description: '小ボーナス', multiplier: 1.2, scoreType: $author$project$Models$Types$SmallStraight},
+		{description: '大きなボーナス', multiplier: 1.8, scoreType: $author$project$Models$Types$LargeStraight},
+		{description: '最大ボーナス', multiplier: 2.0, scoreType: $author$project$Models$Types$Yacht}
+	]);
 var $elm$core$Maybe$withDefault = F2(
 	function (_default, maybe) {
 		if (maybe.$ === 'Just') {
@@ -6068,7 +6103,29 @@ var $elm$core$Maybe$withDefault = F2(
 			return _default;
 		}
 	});
-var $author$project$Update$Update$calculateDamageFromScore = F2(
+var $author$project$Models$Score$DamageCalculator$getScoreMultiplier = function (scoreType) {
+	if (scoreType.$ === 'Special') {
+		return 1.0;
+	} else {
+		return A2(
+			$elm$core$Maybe$withDefault,
+			1.0,
+			A2(
+				$elm$core$Maybe$map,
+				function ($) {
+					return $.multiplier;
+				},
+				$elm$core$List$head(
+					A2(
+						$elm$core$List$filter,
+						function (m) {
+							return _Utils_eq(m.scoreType, scoreType);
+						},
+						$author$project$Models$Score$DamageCalculator$scoreMultipliers))));
+	}
+};
+var $elm$core$Basics$round = _Basics_round;
+var $author$project$Models$Score$DamageCalculator$calculateDamageFromScore = F2(
 	function (scoreType, scoreCard) {
 		var scoreValue = function () {
 			switch (scoreType.$) {
@@ -6115,37 +6172,8 @@ var $author$project$Update$Update$calculateDamageFromScore = F2(
 									scoreCard.specialScores))));
 			}
 		}();
-		var multiplier = function () {
-			switch (scoreType.$) {
-				case 'Aces':
-					return 1.0;
-				case 'Twos':
-					return 1.0;
-				case 'Threes':
-					return 1.0;
-				case 'Fours':
-					return 1.0;
-				case 'Fives':
-					return 1.0;
-				case 'Sixes':
-					return 1.0;
-				case 'Choice':
-					return 1.0;
-				case 'FourOfKind':
-					return 1.4;
-				case 'FullHouse':
-					return 1.6;
-				case 'SmallStraight':
-					return 1.2;
-				case 'LargeStraight':
-					return 1.8;
-				case 'Yacht':
-					return 2.0;
-				default:
-					return 1.0;
-			}
-		}();
-		var finalDamage = $elm$core$Basics$round(scoreValue * multiplier);
+		var finalDamage = $elm$core$Basics$round(
+			scoreValue * $author$project$Models$Score$DamageCalculator$getScoreMultiplier(scoreType));
 		return A2($elm$core$Basics$max, 1, finalDamage);
 	});
 var $elm$core$List$any = F2(
@@ -6794,7 +6822,6 @@ var $author$project$Models$Types$BonusType = F2(
 	function (a, b) {
 		return {$: 'BonusType', a: a, b: b};
 	});
-var $author$project$Models$Types$Choice = {$: 'Choice'};
 var $author$project$Models$Map$createBasicEnemy = F2(
 	function (id, name) {
 		return {
@@ -6818,7 +6845,6 @@ var $author$project$Models$Map$createBasicEnemy = F2(
 		};
 	});
 var $author$project$Models$Types$DoubleAttack = {$: 'DoubleAttack'};
-var $author$project$Models$Types$LargeStraight = {$: 'LargeStraight'};
 var $author$project$Models$Map$createBoss = F2(
 	function (id, name) {
 		return {
@@ -6854,12 +6880,10 @@ var $author$project$Models$Map$createBoss = F2(
 				])
 		};
 	});
-var $author$project$Models$Types$FourOfKind = {$: 'FourOfKind'};
 var $author$project$Models$Types$PenaltyType = F2(
 	function (a, b) {
 		return {$: 'PenaltyType', a: a, b: b};
 	});
-var $author$project$Models$Types$Yacht = {$: 'Yacht'};
 var $author$project$Models$Map$createEliteEnemy = F2(
 	function (id, name) {
 		return {
@@ -7261,7 +7285,7 @@ var $author$project$Update$Update$update = F2(
 						if (_v18.$ === 'Just') {
 							var scoreType = _v18.a;
 							var updatedScoreCard = A2($author$project$Models$Score$calculatePossibleScores, battle.dice, battle.scoreCard);
-							var scoreDamage = A2($author$project$Update$Update$calculateDamageFromScore, scoreType, updatedScoreCard);
+							var scoreDamage = A2($author$project$Models$Score$DamageCalculator$calculateDamageFromScore, scoreType, updatedScoreCard);
 							var updatedEnemy = {
 								attacks: battle.enemy.attacks,
 								hp: A2($elm$core$Basics$max, 0, battle.enemy.hp - scoreDamage),
@@ -7822,57 +7846,11 @@ var $author$project$Views$Helpers$spacer = function (size) {
 			]),
 		_List_Nil);
 };
-var $author$project$Models$Types$Aces = {$: 'Aces'};
-var $author$project$Models$Types$Fives = {$: 'Fives'};
-var $author$project$Models$Types$Fours = {$: 'Fours'};
-var $author$project$Models$Types$FullHouse = {$: 'FullHouse'};
-var $author$project$Models$Types$Sixes = {$: 'Sixes'};
-var $author$project$Models$Types$Threes = {$: 'Threes'};
-var $author$project$Models$Types$Twos = {$: 'Twos'};
-var $elm$core$Maybe$map = F2(
-	function (f, maybe) {
-		if (maybe.$ === 'Just') {
-			var value = maybe.a;
-			return $elm$core$Maybe$Just(
-				f(value));
-		} else {
-			return $elm$core$Maybe$Nothing;
-		}
-	});
 var $author$project$Update$Messages$SelectScore = function (a) {
 	return {$: 'SelectScore', a: a};
 };
-var $author$project$Views$Battle$getMultiplierText = function (scoreType) {
-	var multiplier = function () {
-		switch (scoreType.$) {
-			case 'Aces':
-				return 1.0;
-			case 'Twos':
-				return 1.0;
-			case 'Threes':
-				return 1.0;
-			case 'Fours':
-				return 1.0;
-			case 'Fives':
-				return 1.0;
-			case 'Sixes':
-				return 1.0;
-			case 'Choice':
-				return 1.0;
-			case 'FourOfKind':
-				return 1.4;
-			case 'FullHouse':
-				return 1.6;
-			case 'SmallStraight':
-				return 1.2;
-			case 'LargeStraight':
-				return 1.8;
-			case 'Yacht':
-				return 2.0;
-			default:
-				return 1.0;
-		}
-	}();
+var $author$project$Models$Score$DamageCalculator$formatMultiplier = function (scoreType) {
+	var multiplier = $author$project$Models$Score$DamageCalculator$getScoreMultiplier(scoreType);
 	return (multiplier > 1.0) ? ('×' + $elm$core$String$fromFloat(multiplier)) : '';
 };
 var $author$project$Views$Battle$viewScoreRow = F4(
@@ -7908,7 +7886,7 @@ var $author$project$Views$Battle$viewScoreRow = F4(
 							_List_fromArray(
 								[
 									$elm$html$Html$text(
-									$author$project$Views$Battle$getMultiplierText(scoreType))
+									$author$project$Models$Score$DamageCalculator$formatMultiplier(scoreType))
 								]))
 						])),
 					A2(
