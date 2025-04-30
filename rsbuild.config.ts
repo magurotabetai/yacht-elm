@@ -2,20 +2,22 @@ import { defineConfig } from '@rsbuild/core';
 
 export default defineConfig({
   tools: {
-    webpack: {
-      modules: [
-        {
-          test: /\.elm$/,
-          exclude: [/elm-stuff/, /node_modules/],
-          use: {
-            loader: 'elm-webpack-loader',
-            options: {
-              optimize: process.env.NODE_ENV === 'production',
-              debug: process.env.NODE_ENV !== 'production'
+    rspack: {
+      module: {
+        rules: [
+          {
+            test: /\.elm$/,
+            exclude: [/elm-stuff/, /node_modules/],
+            use: {
+              loader: 'elm-webpack-loader',
+              options: {
+                optimize: process.env.NODE_ENV === 'production',
+                debug: process.env.NODE_ENV !== 'production'
+              }
             }
           }
-        }
-      ]
+        ]
+      }
     }
   },
   source: {

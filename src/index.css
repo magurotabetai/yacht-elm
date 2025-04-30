@@ -24,3 +24,19 @@ body {
   font-weight: 400;
   opacity: 0.5;
 }
+
+/* Elm application styles */
+.elm-app {
+  display: flex;
+  min-height: 100vh;
+  line-height: 1.1;
+  text-align: center;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.elm-app h1 {
+  font-size: 3.6rem;
+  font-weight: 700;
+  margin-bottom: 1rem;
+}

@@ -1,11 +1,10 @@
 import './index.css';
+// @ts-ignore
+import { Elm } from './Main.elm';
 
 const rootEl = document.querySelector('#root');
 if (rootEl) {
-  rootEl.innerHTML = `
-  <div class="content">
-    <h1>Vanilla Rsbuild</h1>
-    <p>Start building amazing things with Rsbuild.</p>
-  </div>
-`;
+  Elm.Main.init({
+    node: rootEl
+  });
 }
