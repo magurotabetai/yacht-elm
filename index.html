@@ -6390,6 +6390,7 @@ var $author$project$Update$Update$getCurrentNodeEnemy = function (run) {
 	}
 };
 var $author$project$Models$Types$EventPhase = {$: 'EventPhase'};
+var $author$project$Update$Messages$StartBattle = {$: 'StartBattle'};
 var $elm$core$Platform$Cmd$batch = _Platform_batch;
 var $elm$core$Platform$Cmd$none = $elm$core$Platform$Cmd$batch(_List_Nil);
 var $author$project$Update$Update$handleNodeEntry = F3(
@@ -6422,17 +6423,38 @@ var $author$project$Update$Update$handleNodeEntry = F3(
 						var enemy = _v2.a;
 						return _Utils_Tuple2(
 							$author$project$Models$Types$BattlePhase,
-							_Utils_Tuple2($elm$core$Platform$Cmd$none, seed));
+							_Utils_Tuple2(
+								A2(
+									$elm$core$Task$perform,
+									function (_v3) {
+										return $author$project$Update$Messages$StartBattle;
+									},
+									$elm$core$Task$succeed(_Utils_Tuple0)),
+								seed));
 					case 'EliteBattleNode':
 						var enemy = _v2.a;
 						return _Utils_Tuple2(
 							$author$project$Models$Types$BattlePhase,
-							_Utils_Tuple2($elm$core$Platform$Cmd$none, seed));
+							_Utils_Tuple2(
+								A2(
+									$elm$core$Task$perform,
+									function (_v4) {
+										return $author$project$Update$Messages$StartBattle;
+									},
+									$elm$core$Task$succeed(_Utils_Tuple0)),
+								seed));
 					case 'BossNode':
 						var boss = _v2.a;
 						return _Utils_Tuple2(
 							$author$project$Models$Types$BattlePhase,
-							_Utils_Tuple2($elm$core$Platform$Cmd$none, seed));
+							_Utils_Tuple2(
+								A2(
+									$elm$core$Task$perform,
+									function (_v5) {
+										return $author$project$Update$Messages$StartBattle;
+									},
+									$elm$core$Task$succeed(_Utils_Tuple0)),
+								seed));
 					case 'RestNode':
 						return _Utils_Tuple2(
 							$author$project$Models$Types$InRun,

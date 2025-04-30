@@ -327,13 +327,13 @@ handleNodeEntry nodeId run seed =
                 Just node ->
                     case node.nodeType of
                         BattleNode enemy ->
-                            ( BattlePhase, ( Cmd.none, seed ) )
+                            ( BattlePhase, ( Task.perform (\_ -> StartBattle) (Task.succeed ()), seed ) )
 
                         EliteBattleNode enemy ->
-                            ( BattlePhase, ( Cmd.none, seed ) )
+                            ( BattlePhase, ( Task.perform (\_ -> StartBattle) (Task.succeed ()), seed ) )
 
                         BossNode boss ->
-                            ( BattlePhase, ( Cmd.none, seed ) )
+                            ( BattlePhase, ( Task.perform (\_ -> StartBattle) (Task.succeed ()), seed ) )
 
                         RestNode ->
                             -- 休憩ポイント：HPを少し回復
