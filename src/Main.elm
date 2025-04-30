@@ -53,7 +53,7 @@ viewCurrentScreen model =
                 Nothing ->
                     div [ class "error-message" ] [ Html.text "ゲームデータが見つかりません" ]
 
-        Battle ->
+        BattlePhase ->
             case model.currentRun of
                 Just run ->
                     case run.currentBattle of
@@ -66,7 +66,7 @@ viewCurrentScreen model =
                 Nothing ->
                     div [ class "error-message" ] [ Html.text "ゲームデータが見つかりません" ]
 
-        Event ->
+        EventPhase ->
             div [ class "temp-message" ] [ Html.text "イベント画面は開発中です" ]
 
         GameOver ->
