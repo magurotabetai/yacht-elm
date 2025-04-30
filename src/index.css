@@ -497,6 +497,22 @@ body {
   box-shadow: 0 0 8px rgba(255, 255, 255, 0.5);
 }
 
+.score-label {
+  display: flex;
+  align-items: center;
+}
+
+.multiplier-text {
+  margin-left: 0.5rem;
+  font-size: 0.8rem;
+  color: #f6ad55;
+  font-weight: bold;
+}
+
+.selected-score .multiplier-text {
+  color: #fefcbf;
+}
+
 .score-value {
   font-weight: bold;
 }

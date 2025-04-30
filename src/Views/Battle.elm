@@ -143,7 +143,10 @@ viewScoreRow battle label value scoreType =
         [ class ("score-row" ++ if battle.selectedScoreType == Just scoreType then " selected-score" else "")
         , onClick (SelectScore scoreType)
         ]
-        [ div [ class "score-label" ] [ text label ]
+        [ div [ class "score-label" ] 
+            [ text label
+            , span [ class "multiplier-text" ] [ text (getMultiplierText scoreType) ]
+            ]
         , div [ class "score-value" ] [ text value ]
         ]
 
@@ -162,3 +165,30 @@ viewBattleFooter logs =
 viewLogEntry : String -> Html Msg
 viewLogEntry log =
     div [ class "log-entry" ] [ text log ]
+
+-- スコアタイプに応じた倍率を取得
+getMultiplierText : ScoreType -> String
+getMultiplierText scoreType =
+    let
+        multiplier =
+            case scoreType of
+                -- 上の部は基本通り
+                Aces -> 1.0
+                Twos -> 1.0
+                Threes -> 1.0
+                Fours -> 1.0
+                Fives -> 1.0
+                Sixes -> 1.0
+                -- 下の部は倍率が高い
+                Choice -> 1.0
+                FourOfKind -> 1.4    -- フォーカインド 1.4倍
+                FullHouse -> 1.6     -- フルハウス 1.6倍
+                SmallStraight -> 1.2 -- Sストレート 1.2倍
+                LargeStraight -> 1.8 -- Lストレート 1.8倍
+                Yacht -> 2.0         -- ヨット 2.0倍
+                Special _ -> 1.0     -- 特殊スコアは基本倍率
+    in
+    if multiplier > 1.0 then
+        "×" ++ String.fromFloat multiplier
+    else
+        ""

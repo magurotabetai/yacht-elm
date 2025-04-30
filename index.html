@@ -6058,6 +6058,7 @@ var $elm$core$List$head = function (list) {
 		return $elm$core$Maybe$Nothing;
 	}
 };
+var $elm$core$Basics$round = _Basics_round;
 var $elm$core$Maybe$withDefault = F2(
 	function (_default, maybe) {
 		if (maybe.$ === 'Just') {
@@ -6114,38 +6115,38 @@ var $author$project$Update$Update$calculateDamageFromScore = F2(
 									scoreCard.specialScores))));
 			}
 		}();
-		var bonusDamage = function () {
+		var multiplier = function () {
 			switch (scoreType.$) {
 				case 'Aces':
-					return 0;
+					return 1.0;
 				case 'Twos':
-					return 0;
+					return 1.0;
 				case 'Threes':
-					return 0;
+					return 1.0;
 				case 'Fours':
-					return 0;
+					return 1.0;
 				case 'Fives':
-					return 0;
+					return 1.0;
 				case 'Sixes':
-					return 0;
+					return 1.0;
 				case 'Choice':
-					return 1;
+					return 1.0;
 				case 'FourOfKind':
-					return 3;
+					return 1.4;
 				case 'FullHouse':
-					return 4;
+					return 1.6;
 				case 'SmallStraight':
-					return 5;
+					return 1.2;
 				case 'LargeStraight':
-					return 7;
+					return 1.8;
 				case 'Yacht':
-					return 10;
+					return 2.0;
 				default:
-					return 5;
+					return 1.0;
 			}
 		}();
-		var baseDamage = ((scoreValue + 1) / 2) | 0;
-		return A2($elm$core$Basics$max, 1, baseDamage + bonusDamage);
+		var finalDamage = $elm$core$Basics$round(scoreValue * multiplier);
+		return A2($elm$core$Basics$max, 1, finalDamage);
 	});
 var $elm$core$List$any = F2(
 	function (isOkay, list) {
@@ -7841,6 +7842,39 @@ var $elm$core$Maybe$map = F2(
 var $author$project$Update$Messages$SelectScore = function (a) {
 	return {$: 'SelectScore', a: a};
 };
+var $author$project$Views$Battle$getMultiplierText = function (scoreType) {
+	var multiplier = function () {
+		switch (scoreType.$) {
+			case 'Aces':
+				return 1.0;
+			case 'Twos':
+				return 1.0;
+			case 'Threes':
+				return 1.0;
+			case 'Fours':
+				return 1.0;
+			case 'Fives':
+				return 1.0;
+			case 'Sixes':
+				return 1.0;
+			case 'Choice':
+				return 1.0;
+			case 'FourOfKind':
+				return 1.4;
+			case 'FullHouse':
+				return 1.6;
+			case 'SmallStraight':
+				return 1.2;
+			case 'LargeStraight':
+				return 1.8;
+			case 'Yacht':
+				return 2.0;
+			default:
+				return 1.0;
+		}
+	}();
+	return (multiplier > 1.0) ? ('×' + $elm$core$String$fromFloat(multiplier)) : '';
+};
 var $author$project$Views$Battle$viewScoreRow = F4(
 	function (battle, label, value, scoreType) {
 		return A2(
@@ -7864,7 +7898,18 @@ var $author$project$Views$Battle$viewScoreRow = F4(
 						]),
 					_List_fromArray(
 						[
-							$elm$html$Html$text(label)
+							$elm$html$Html$text(label),
+							A2(
+							$elm$html$Html$span,
+							_List_fromArray(
+								[
+									$elm$html$Html$Attributes$class('multiplier-text')
+								]),
+							_List_fromArray(
+								[
+									$elm$html$Html$text(
+									$author$project$Views$Battle$getMultiplierText(scoreType))
+								]))
 						])),
 					A2(
 					$elm$html$Html$div,

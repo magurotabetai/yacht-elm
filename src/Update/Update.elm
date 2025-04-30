@@ -341,7 +341,7 @@ calculateDamageFromScore : ScoreType -> ScoreCard -> Int
 calculateDamageFromScore scoreType scoreCard =
     let
         -- スコアタイプに応じた値を取得
-        scoreValue =
+        scoreValue = 
             case scoreType of
                 Aces -> Maybe.withDefault 0 scoreCard.aces
                 Twos -> Maybe.withDefault 0 scoreCard.twos
@@ -355,37 +355,37 @@ calculateDamageFromScore scoreType scoreCard =
                 SmallStraight -> Maybe.withDefault 0 scoreCard.smallStraight
                 LargeStraight -> Maybe.withDefault 0 scoreCard.largeStraight
                 Yacht -> Maybe.withDefault 0 scoreCard.yacht
-                Special name ->
+                Special name -> 
                     -- 特殊スコアは対応する specialScores から取得
                     scoreCard.specialScores
                         |> List.filter (\s -> s.scoreType == name)
                         |> List.head
                         |> Maybe.andThen .value
                         |> Maybe.withDefault 0
-
-        -- 基本ダメージ計算（スコア値をそのまま使用）
-        baseDamage = scoreValue
-
-        -- スコアタイプに応じたボーナスダメージ
-        bonusDamage =
+        
+        -- スコアタイプに応じた倍率
+        multiplier =
             case scoreType of
                 -- 上の部は基本通り
-                Aces -> 0
-                Twos -> 0
-                Threes -> 0
-                Fours -> 0
-                Fives -> 0
-                Sixes -> 0
-                -- 下の部はボーナスダメージあり
-                Choice -> 1  -- チョイスは少しボーナス
-                FourOfKind -> 3  -- フォーカインドは中程度ボーナス
-                FullHouse -> 4  -- フルハウスは大きめボーナス
-                SmallStraight -> 5  -- Sストレートは大きめボーナス
-                LargeStraight -> 7  -- Lストレートは大きなボーナス
-                Yacht -> 10  -- ヨットは最大ボーナス
-                Special _ -> 5  -- 特殊スコアは中程度のボーナス
+                Aces -> 1.0
+                Twos -> 1.0
+                Threes -> 1.0
+                Fours -> 1.0
+                Fives -> 1.0
+                Sixes -> 1.0
+                -- 下の部は倍率が高い
+                Choice -> 1.0
+                FourOfKind -> 1.4    -- フォーカインド 1.4倍
+                FullHouse -> 1.6     -- フルハウス 1.6倍
+                SmallStraight -> 1.2 -- Sストレート 1.2倍
+                LargeStraight -> 1.8 -- Lストレート 1.8倍
+                Yacht -> 2.0         -- ヨット 2.0倍
+                Special _ -> 1.0     -- 特殊スコアは基本倍率
+        
+        -- 倍率を適用したダメージ計算
+        finalDamage = round (toFloat scoreValue * multiplier)
     in
-    max 1 (baseDamage + bonusDamage)  -- 最低でも1ダメージは保証
+    max 1 finalDamage  -- 最低でも1ダメージは保証
 
 -- ノード進入時の処理
 handleNodeEntry : String -> Run -> Random.Seed -> ( GamePhase, ( Cmd Msg, Random.Seed ) )
