@@ -1,29 +1,47 @@
-module Models.Game exposing (..)
+module Models.Game exposing
+    ( GameState
+    , Player
+    , Run
+    , initGameState
+    , startNewRun
+    , startBattle
+    )
 
-import Models.Character exposing (Character, Item, availableCharacters)
-import Models.Dice exposing (Dice, standardDiceSet)
-import Models.Map exposing (Map)
-import Models.Score exposing (ScoreCard, initScoreCard, initScoreHistory)
-import Models.Types exposing (..)
+import Dict exposing (Dict)
+import Models.Battle.Logic as BattleLogic
+import Models.Battle.Types exposing (Battle, initBattle)
+import Models.Character.Characters exposing (availableCharacters)
+import Models.Character.Types exposing (Character)
+import Models.Dice exposing (standardDiceSet)
+import Models.Enemy.Repository as EnemyRepo
+import Models.Enemy.Types exposing (Enemy)
+import Models.Item.Repository as ItemRepo
+import Models.Item.Types exposing (Item)
+import Models.Map as Map exposing (Map)
+import Models.Types exposing (GamePhase(..))
 import Random
 import Time
 
+-- TYPES
+
+-- Main application state
 type alias GameState =
     { player : Player
     , currentRun : Maybe Run
-    , unlockedContent : UnlockedContent
-    , settings : Settings
     , gamePhase : GamePhase
     , seed : Random.Seed
+    , settings : Settings
     }
 
+-- Player profile
 type alias Player =
     { id : String
     , name : String
-    , selectedCharacter : Maybe Character
+    , selectedCharacterId : Maybe String
     , stats : PlayerStats
     }
 
+-- Player statistics
 type alias PlayerStats =
     { totalRuns : Int
     , bossesDefeated : List String
@@ -31,12 +49,14 @@ type alias PlayerStats =
     , totalGold : Int
     }
 
+-- A single game run
 type alias Run =
     { id : String
     , seed : Int
     , currentFloor : Int
     , map : Map
-    , inventory : Inventory
+    , inventory : List String  -- Item IDs
+    , equippedItems : List String  -- Equipped item IDs
     , battlesWon : Int
     , currentHP : Int
     , maxHP : Int
@@ -45,70 +65,49 @@ type alias Run =
     , characterId : String
     }
 
-type alias Inventory =
-    { items : List Item
-    , activeItemSlots : List String  -- アクティブアイテムとして装備されているアイテムIDのリスト
-    }
-
-type alias Battle =
-    { enemy : EnemyData
-    , boss : Maybe BossData
-    , turn : Int
-    , dice : List Dice
-    , remainingRerolls : Int
-    , maxRerolls : Int  -- 最大リロール回数を追加
-    , scoreHistory : ScoreHistory  -- scoreCardの代わりにscoreHistoryを使用
-    , selectedScoreType : Maybe ScoreType  -- 選択されているがまだ確定していないスコアタイプ
-    , playerDamageDealt : Int
-    , enemyDamageDealt : Int
-    , battleLog : List String
-    }
-
-type alias UnlockedContent =
-    { characters : List Character
-    , items : List String
-    , specialDice : List String
-    , achievements : List String
-    }
-
+-- Game settings
 type alias Settings =
     { audio : AudioSettings
-    , graphics : GraphicsSettings
+    , display : DisplaySettings
     , gameplay : GameplaySettings
-    , accessibility : AccessibilitySettings
     }
 
+-- Audio settings
 type alias AudioSettings =
     { musicVolume : Float
     , sfxVolume : Float
     , masterVolume : Float
     }
 
-type alias GraphicsSettings =
+-- Display settings
+type alias DisplaySettings =
     { resolution : String
     , fullscreen : Bool
     , effectQuality : String
     }
 
+-- Gameplay settings
 type alias GameplaySettings =
-    { autosave : Bool
-    , difficultyLevel : String
+    { difficulty : Difficulty
     , tutorialEnabled : Bool
     }
 
-type alias AccessibilitySettings =
-    { colorblindMode : Bool
-    , textSize : String
-    , highContrast : Bool
-    }
+-- Difficulty levels
+type Difficulty
+    = Easy
+    | Normal
+    | Hard
+    | Nightmare
 
--- 初期ゲーム状態を生成
+-- INITIALIZATION
+
+-- Initialize a new game state
 initGameState : Int -> GameState
 initGameState initialSeed =
     { player =
         { id = "player-" ++ String.fromInt initialSeed
         , name = "プレイヤー"
-        , selectedCharacter = Nothing
+        , selectedCharacterId = Nothing
         , stats =
             { totalRuns = 0
             , bossesDefeated = []
@@ -117,107 +116,12 @@ initGameState initialSeed =
             }
         }
     , currentRun = Nothing
-    , unlockedContent =
-        { characters = availableCharacters
-        , items = []
-        , specialDice = []
-        , achievements = []
-        }
-    , settings = defaultSettings
     , gamePhase = MainMenu
     , seed = Random.initialSeed initialSeed
+    , settings = defaultSettings
     }
 
--- 新しいランを開始
-startNewRun : Character -> GameState -> ( GameState, Cmd msg )
-startNewRun character gameState =
-    let
-        ( randomSeed, nextSeed ) =
-            Random.step (Random.int 1 999999) gameState.seed
-
-        ( initialMap, newSeed ) =
-            Models.Map.initMap nextSeed
-
-        newRun =
-            { id = "run-" ++ String.fromInt randomSeed
-            , seed = randomSeed
-            , currentFloor = 1
-            , map = initialMap
-            , inventory =
-                { items = character.startingItems
-                , activeItemSlots = []
-                }
-            , battlesWon = 0
-            , currentHP = character.startingHP
-            , maxHP = character.maxHP
-            , gold = 0
-            , currentBattle = Nothing
-            , characterId = character.id
-            }
-
-        updatedPlayer =
-            { id = gameState.player.id
-            , name = gameState.player.name
-            , selectedCharacter = Just character
-            , stats =
-                { totalRuns = gameState.player.stats.totalRuns + 1
-                , bossesDefeated = gameState.player.stats.bossesDefeated
-                , highScore = gameState.player.stats.highScore
-                , totalGold = gameState.player.stats.totalGold
-                }
-            }
-
-        updatedGameState =
-            { gameState
-            | player = updatedPlayer
-            , currentRun = Just newRun
-            , gamePhase = InRun
-            , seed = newSeed
-            }
-    in
-    ( updatedGameState, Cmd.none )
-
--- バトルを開始
-startBattle : EnemyData -> Maybe BossData -> Run -> ( Run, Cmd msg )
-startBattle enemy boss run =
-    let
-        -- キャラクターに基づいてリロール回数を決定
-        -- ラッキーローラーは3回、それ以外は2回
-        rerollCount =
-            if run.characterId == "lucky_roller" then
-                3  -- ラッキーローラーは3回リロール可能
-            else
-                2  -- その他のキャラクターは2回
-
-        initialBattle =
-            { enemy = enemy
-            , boss = boss
-            , turn = 1
-            , dice = standardDiceSet
-            , remainingRerolls = rerollCount
-            , maxRerolls = rerollCount  -- 初期値はremainingRerollsと同じ
-            , scoreHistory = initScoreHistory  -- scoreCardからscoreHistoryに変更
-            , selectedScoreType = Nothing
-            , playerDamageDealt = 0
-            , enemyDamageDealt = 0
-            , battleLog = [ enemy.name ++ "が現れた！" ]
-            }
-
-        -- ダイスロールのジェネレーターを作成
-        diceRollGenerator = Models.Dice.rollMultipleDice initialBattle.dice
-        -- 乱数シードを使ってダイスを振る
-        (rolledDice, newSeed) = Random.step diceRollGenerator (Random.initialSeed run.seed)
-
-        -- 振ったダイスで初期バトル状態を更新
-        battleWithRolledDice =
-            { initialBattle | dice = rolledDice }  -- scoreCardの計算は不要になったため削除
-
-        updatedRun =
-            { run | currentBattle = Just battleWithRolledDice }
-    in
-    ( updatedRun, Cmd.none )
-
--- デフォルト設定
+-- Default game settings
 defaultSettings : Settings
 defaultSettings =
     { audio =
@@ -225,19 +129,147 @@ defaultSettings =
         , sfxVolume = 0.8
         , masterVolume = 0.8
         }
-    , graphics =
+    , display =
         { resolution = "1280x720"
         , fullscreen = False
         , effectQuality = "Medium"
         }
     , gameplay =
-        { autosave = True
-        , difficultyLevel = "Normal"
+        { difficulty = Normal
         , tutorialEnabled = True
         }
-    , accessibility =
-        { colorblindMode = False
-        , textSize = "Medium"
-        , highContrast = False
-        }
     }
+
+-- GAME ACTIONS
+
+-- Start a new run with a selected character
+startNewRun : String -> GameState -> (GameState, Cmd msg)
+startNewRun characterId gameState =
+    let
+        selectedCharacter =
+            availableCharacters
+                |> List.filter (\c -> c.id == characterId)
+                |> List.head
+
+        ( randomSeed, nextSeed ) =
+            Random.step (Random.int 1 999999) gameState.seed
+
+        ( initialMap, mapSeed ) =
+            Map.initMap nextSeed
+    in
+    case selectedCharacter of
+        Just character ->
+            let
+                -- Get starting items
+                startingItems =
+                    character.startingItemIds
+                
+                newRun =
+                    { id = "run-" ++ String.fromInt randomSeed
+                    , seed = randomSeed
+                    , currentFloor = 1
+                    , map = initialMap
+                    , inventory = startingItems
+                    , equippedItems = []
+                    , battlesWon = 0
+                    , currentHP = character.startingHP
+                    , maxHP = character.maxHP
+                    , gold = 0
+                    , currentBattle = Nothing
+                    , characterId = character.id
+                    }
+
+                updatedPlayerStats =
+                    { totalRuns = gameState.player.stats.totalRuns + 1
+                    , bossesDefeated = gameState.player.stats.bossesDefeated
+                    , highScore = gameState.player.stats.highScore
+                    , totalGold = gameState.player.stats.totalGold
+                    }
+
+                updatedPlayer =
+                    { id = gameState.player.id
+                    , name = gameState.player.name
+                    , selectedCharacterId = Just character.id
+                    , stats = updatedPlayerStats
+                    }
+
+                updatedGameState =
+                    { gameState
+                        | player = updatedPlayer
+                        , currentRun = Just newRun
+                        , gamePhase = InRun
+                        , seed = mapSeed
+                    }
+            in
+            ( updatedGameState, Cmd.none )
+
+        Nothing ->
+            -- Character not found
+            ( gameState, Cmd.none )
+
+-- Start a battle with an enemy
+startBattle : String -> Run -> Random.Seed -> (Run, Random.Seed)
+startBattle enemyId run seed =
+    let
+        enemyResult = 
+            EnemyRepo.getEnemyById enemyId
+    in
+    case enemyResult of
+        Just enemy ->
+            -- Determine reroll count (character-specific ability may modify this)
+            let
+                rerollCount =
+                    if run.characterId == "lucky_roller" then
+                        3  -- Lucky Roller character gets more rerolls
+                    else
+                        2  -- Standard reroll count
+                
+                -- Create a fresh battle ID
+                (battleIdRandom, nextSeed) =
+                    Random.step (Random.int 10000 99999) seed
+                
+                battleId =
+                    "battle-" ++ String.fromInt battleIdRandom
+                    
+                -- Initialize the battle
+                battle =
+                    initBattle 
+                        battleId 
+                        enemy.id 
+                        enemy.name 
+                        enemy.maxHP 
+                        enemy.maxHP 
+                        run.currentHP 
+                        run.maxHP 
+                        rerollCount
+                
+                -- Initial dice roll
+                (rolledBattle, rollSeed) =
+                    BattleLogic.rollDice 
+                        { battle | dice = standardDiceSet } 
+                        nextSeed
+                        
+                -- Update the run with the new battle
+                updatedRun =
+                    { run | currentBattle = Just rolledBattle }
+            in
+            (updatedRun, rollSeed)
+            
+        Nothing ->
+            -- Enemy not found, return unchanged
+            (run, seed)
+
+-- Find an item by ID from a list of inventory items
+getInventoryItem : String -> List String -> Maybe Item
+getInventoryItem itemId inventory =
+    if List.member itemId inventory then
+        ItemRepo.getItemById itemId
+    else
+        Nothing
+
+-- Get character by ID
+getCharacterById : String -> Maybe Character
+getCharacterById id =
+    availableCharacters
+        |> List.filter (\c -> c.id == id)
+        |> List.head

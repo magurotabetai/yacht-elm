@@ -1,19 +1,24 @@
 module Main exposing (main)
 
 import Browser
-import Html exposing (Html, div)
+import Html exposing (Html)
 import Html.Attributes exposing (class)
-import Models.Game exposing (GameState)
-import Models.Types exposing (GamePhase(..))
-import Update.Messages exposing (Msg)
-import Update.Update exposing (init, update)
-import Views.Battle exposing (viewBattle)
-import Views.CharacterSelection exposing (viewCharacterSelection)
-import Views.MainMenu exposing (viewMainMenu)
-import Views.Map exposing (viewMap)
 import Browser.Events exposing (onResize)
 import Time
 
+-- Domain models
+import Models.Game as Game exposing (GameState)
+import Models.Types exposing (GamePhase(..))
+
+-- Update logic
+import Update.Messages as Msg exposing (Msg)
+import Update.Update as Update exposing (init, update)
+
+-- View components
+import Views.Router as Router
+
+
+-- APPLICATION
 
 main : Program () GameState Msg
 main =
@@ -25,60 +30,18 @@ main =
         }
 
 
--- メインビュー関数
+-- VIEW
+
 view : GameState -> Html Msg
-view model =
-    div [ class "game-container" ]
-        [ div [ class "game-content" ]
-            [ viewCurrentScreen model
-            ]
-        ]
+view =
+    Router.view
 
 
--- 現在のゲーム状態に基づいて適切な画面を表示
-viewCurrentScreen : GameState -> Html Msg
-viewCurrentScreen model =
-    case model.gamePhase of
-        MainMenu ->
-            viewMainMenu model
+-- SUBSCRIPTIONS
 
-        CharacterSelection ->
-            viewCharacterSelection model
-
-        InRun ->
-            case model.currentRun of
-                Just run ->
-                    viewMap model run
-
-                Nothing ->
-                    div [ class "error-message" ] [ Html.text "ゲームデータが見つかりません" ]
-
-        BattlePhase ->
-            case model.currentRun of
-                Just run ->
-                    case run.currentBattle of
-                        Just battle ->
-                            viewBattle model run battle
-
-                        Nothing ->
-                            div [ class "error-message" ] [ Html.text "戦闘データが見つかりません" ]
-
-                Nothing ->
-                    div [ class "error-message" ] [ Html.text "ゲームデータが見つかりません" ]
-
-        EventPhase ->
-            div [ class "temp-message" ] [ Html.text "イベント画面は開発中です" ]
-
-        GameOver ->
-            div [ class "temp-message" ] [ Html.text "ゲームオーバー画面は開発中です" ]
-
-        Victory ->
-            div [ class "temp-message" ] [ Html.text "勝利画面は開発中です" ]
-
-
--- サブスクリプション
 subscriptions : GameState -> Sub Msg
 subscriptions _ =
     Sub.batch
-        [ onResize Update.Messages.WindowResize  -- ウィンドウサイズ変更検知
+        [ onResize Msg.WindowResize
+        , Time.every 1000 Msg.TickTime  -- 時間ベースの更新（1秒ごと）
         ]

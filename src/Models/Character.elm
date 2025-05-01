@@ -1,6 +1,8 @@
 module Models.Character exposing (..)
 
 import Models.Types exposing (..)
+import Models.Item.Types exposing (Item, ItemEffect(..), ItemType(..), Rarity(..))
+import Models.Character.Types exposing (CharacterAbility(..), UnlockCondition(..))
 
 type alias Character =
     { id : String
@@ -12,17 +14,6 @@ type alias Character =
     , specialAbility : CharacterAbility
     , startingItems : List Item
     , unlockCondition : Maybe UnlockCondition
-    }
-
-type alias Item =
-    { id : String
-    , name : String
-    , description : String
-    , rarity : Rarity
-    , itemType : ItemType
-    , effects : List ItemEffect
-    , cost : Int
-    , unlocked : Bool
     }
 
 -- 初期キャラクター: ラッキーローラー

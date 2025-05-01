@@ -1,22 +1,24 @@
-module Views.CharacterSelection exposing (viewCharacterSelection)
+module Views.CharacterSelection exposing (view)
 
 import Html exposing (Html, div, h1, h2, img, p, text)
 import Html.Attributes exposing (class, src, alt)
 import Html.Events exposing (onClick)
-import Models.Character exposing (Character, characterAbilityToString)
+import Models.Character.Types exposing (Character)
+import Models.Character.Characters exposing (availableCharacters)
+import Models.Character.Types exposing (characterAbilityToString)
 import Models.Game exposing (GameState)
 import Update.Messages exposing (Msg(..))
 import Views.Helpers exposing (viewButton, viewCard, spacer)
 
 
-viewCharacterSelection : GameState -> Html Msg
-viewCharacterSelection gameState =
+view : GameState -> Html Msg
+view gameState =
     div [ class "character-selection" ]
         [ h1 [] [ text "キャラクター選択" ]
         , p [ class "selection-info" ] [ text "冒険に出るキャラクターを選択してください" ]
         , spacer 2
         , div [ class "characters-grid" ]
-            (List.map viewCharacterCard gameState.unlockedContent.characters)
+            (List.map viewCharacterCard availableCharacters)
         , spacer 3
         , div [ class "navigation-buttons" ]
             [ viewButton "戻る" BackToMainMenu False ]
@@ -43,8 +45,8 @@ viewCharacterCard character =
                 [ p [ class "items-title" ] [ text "初期アイテム" ]
                 , div [ class "items-list" ]
                     (List.map
-                        (\item -> div [ class "item-name" ] [ text item.name ])
-                        character.startingItems
+                        (\itemId -> div [ class "item-name" ] [ text itemId ])
+                        character.startingItemIds
                     )
                 ]
             ]

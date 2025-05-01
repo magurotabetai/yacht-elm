@@ -1,15 +1,12 @@
 module Update.Messages exposing (..)
 
-import Models.Character exposing (Character)
-import Models.Dice exposing (Dice)
-import Models.Map exposing (Node)
-import Models.Score exposing (ScoreCard)
+import Models.Character.Types exposing (Character)
 import Models.Types exposing (ScoreType)
 import Time
 
 
 type Msg
-    -- システムと初期化
+    -- システム関連
     = NoOp
     | Initialize Time.Posix
     | TickTime Time.Posix
@@ -19,35 +16,33 @@ type Msg
     | StartGame
     | SelectCharacter Character
     | BackToMainMenu
-    | MoveToNode Node
+    | MoveToNode String  -- ノードID
 
     -- バトル関連
     | StartBattle
     | RollDice
-    | ToggleHoldDice String  -- ダイスのIDを指定
-    | SelectScore ScoreType   -- スコアを選択（表示のみ）
-    | ConfirmScore            -- 選択したスコアを確定して攻撃
-    | EndTurn
-    | UseActiveItem String  -- アイテムIDを指定
-    | FinishBattle Bool  -- 勝利したかどうか
-
-    -- マップ関係
-    | EnterNode String  -- ノードID
-    | ChoosePathOption Int  -- 選択肢の番号
+    | ToggleHoldDice String  -- ダイスID
+    | SelectScore ScoreType  -- スコアタイプを選択
+    | ConfirmScore  -- 選択したスコアを確定
+    | ConfirmScoreWithTime Time.Posix  -- 内部メッセージ
+    | EnemyAttack Int  -- 敵の攻撃（ダメージ量）
+    | EnemyAttackWithTime Int Time.Posix  -- 内部メッセージ
+    | EndTurn  -- ターン終了
+    | UseActiveItem String  -- アイテムID
+    | EndBattle Bool  -- 勝利したかどうか
 
     -- アイテム関連
     | SelectItem String  -- アイテムID
     | BuyItem String  -- アイテムID
     | SellItem String  -- アイテムID
-    | EquipActiveItem String  -- アイテムID
-    | UnequipActiveItem String  -- アイテムID
+    | EquipItem String  -- アイテムID
+    | UnequipItem String  -- アイテムID
 
     -- 設定関連
     | OpenSettings
     | UpdateAudioSettings { musicVolume : Maybe Float, sfxVolume : Maybe Float, masterVolume : Maybe Float }
-    | UpdateGraphicsSettings { resolution : Maybe String, fullscreen : Maybe Bool, effectQuality : Maybe String }
-    | UpdateGameplaySettings { autosave : Maybe Bool, difficultyLevel : Maybe String, tutorialEnabled : Maybe Bool }
-    | UpdateAccessibilitySettings { colorblindMode : Maybe Bool, textSize : Maybe String, highContrast : Maybe Bool }
+    | UpdateDisplaySettings { resolution : Maybe String, fullscreen : Maybe Bool, effectQuality : Maybe String }
+    | UpdateGameplaySettings { difficulty : Maybe String, tutorialEnabled : Maybe Bool }
     | CloseSettings
 
     -- セーブ/ロード

@@ -4,8 +4,7 @@ import Html exposing (Html, div, h1, h2, p, text, button, span)
 import Html.Attributes exposing (class, style)
 import Html.Events exposing (onClick)
 import Models.Game exposing (GameState, Run)
-import Models.Map exposing (Node, getAvailableNodes)
-import Models.Types exposing (NodeType(..))
+import Models.Map exposing (Node, getAvailableNodes, NodeType(..))
 import Update.Messages exposing (Msg(..))
 import Views.Helpers exposing (viewButton)
 
@@ -166,7 +165,7 @@ viewMapNode node isCurrent isAvailable =
 
         clickEvent =
             if isAvailable then
-                onClick (EnterNode node.id)
+                onClick (MoveToNode node.id)
             else
                 onClick NoOp
     in

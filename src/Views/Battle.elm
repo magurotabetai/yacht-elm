@@ -3,10 +3,12 @@ module Views.Battle exposing (viewBattle)
 import Html exposing (Html, div, h1, h2, h3, p, text, button, span)
 import Html.Attributes exposing (class, style)
 import Html.Events exposing (onClick)
-import Models.Game exposing (GameState, Run, Battle)
-import Models.Score exposing (calculateScore, isScoreAvailable)
+import Models.Game exposing (GameState, Run)
+import Models.Battle.Types exposing (Battle, BattleState(..))
+import Models.Score exposing (calculateScoreValue, isScoreAvailable)
 import Models.Score.DamageCalculator exposing (formatMultiplier)
-import Models.Types exposing (ScoreType(..), EnemyData, BossData)
+import Models.Types exposing (ScoreType(..))
+import Time
 import Update.Messages exposing (Msg(..))
 import Views.Helpers exposing (viewButton, spacer, viewBadge)
 
@@ -14,61 +16,54 @@ import Views.Helpers exposing (viewButton, spacer, viewBadge)
 viewBattle : GameState -> Run -> Battle -> Html Msg
 viewBattle gameState run battle =
     div [ class "battle-screen" ]
-        [ viewBattleHeader battle.enemy battle.boss
+        [ viewBattleHeader battle
         , div [ class "battle-main" ]
             [ viewBattleLeft battle
             , viewBattleRight battle
             ]
-        , viewBattleFooter battle.battleLog
+        , viewBattleFooter battle.log.entries
         ]
 
 -- バトルヘッダー（敵情報と自分の情報）
-viewBattleHeader : EnemyData -> Maybe BossData -> Html Msg
-viewBattleHeader enemy boss =
+viewBattleHeader : Battle -> Html Msg
+viewBattleHeader battle =
     div [ class "battle-header" ]
-        [ viewEnemyInfo enemy boss
-        , viewPlayerInfo
+        [ viewEnemyInfo battle
+        , viewPlayerInfo battle
         ]
 
 -- 敵の情報表示
-viewEnemyInfo : EnemyData -> Maybe BossData -> Html Msg
-viewEnemyInfo enemy boss =
+viewEnemyInfo : Battle -> Html Msg
+viewEnemyInfo battle =
+    let
+        isEnemyBoss = String.contains "boss" battle.enemyId || String.contains "dragon" battle.enemyId
+    in
     div [ class "enemy-info" ]
         [ div [ class "enemy-header" ]
             [ h2 []
-                [ text enemy.name
-                , if boss /= Nothing then viewBadge "boss" "ボス" else text ""
+                [ text battle.enemyName
+                , if isEnemyBoss then viewBadge "boss" "ボス" else text ""
                 ]
             ]
         , div [ class "health-bar" ]
             [ div
                 [ class "health-fill"
-                , style "width" (String.fromFloat (toFloat enemy.hp / toFloat enemy.maxHp * 100) ++ "%")
+                , style "width" (String.fromFloat (toFloat battle.enemyCurrentHP / toFloat battle.enemyMaxHP * 100) ++ "%")
                 ]
                 []
             ]
         , div [ class "health-text" ]
-            [ text (String.fromInt enemy.hp ++ " / " ++ String.fromInt enemy.maxHp) ]
-        , div [ class "enemy-attacks" ]
-            (List.map viewEnemyAttack enemy.attacks)
-        ]
-
--- 敵の攻撃情報表示
-viewEnemyAttack : { name : String, damage : Int, description : String } -> Html Msg
-viewEnemyAttack attack =
-    div [ class "attack-info" ]
-        [ span [ class "attack-name" ] [ text attack.name ]
-        , span [] [ text (String.fromInt attack.damage ++ "ダメージ") ]
+            [ text (String.fromInt battle.enemyCurrentHP ++ " / " ++ String.fromInt battle.enemyMaxHP) ]
         ]
 
 -- プレイヤー情報表示
-viewPlayerInfo : Html Msg
-viewPlayerInfo =
+viewPlayerInfo : Battle -> Html Msg
+viewPlayerInfo battle =
     div [ class "player-info" ]
-        [ div [ class "gold-info" ]
-            [ span [ class "gold-icon" ] [ text "💰" ]
-            , span [] [ text "100" ]
-            ]
+        [ div [ class "player-health" ]
+            [ text ("HP: " ++ String.fromInt battle.playerCurrentHP ++ " / " ++ String.fromInt battle.playerMaxHP) ]
+        , div [ class "turn-info" ]
+            [ text ("ターン: " ++ String.fromInt battle.turn) ]
         ]
 
 -- バトルの左側エリア（ダイス、アクションエリア）
@@ -89,7 +84,7 @@ viewBattleLeft battle =
                 ]
             ]
         , div [ class "action-buttons" ]
-            [ viewButton "振り直す" RollDice (battle.remainingRerolls <= 0)
+            [ viewButton "振り直す" RollDice (battle.remainingRerolls <= 0 || battle.state /= Rolling)
             , viewButton "スコア決定" ConfirmScore (battle.selectedScoreType == Nothing)
             ]
         ]
@@ -114,11 +109,25 @@ viewBattleRight battle =
             ]
         , spacer 3
         , div [ class "card" ]
-            [ div [ class "card-header" ] [ text "アイテム" ]
+            [ div [ class "card-header" ] [ text "バトル状態" ]
             , div [ class "card-content" ]
-                [ text "実装予定" ]
+                [ viewBattleState battle.state ]
             ]
         ]
+
+-- バトル状態の表示
+viewBattleState : BattleState -> Html Msg
+viewBattleState state =
+    let
+        (stateText, stateClass) =
+            case state of
+                Rolling -> ("ダイスロール中", "state-rolling")
+                Selecting -> ("スコア選択中", "state-selecting")
+                EnemyTurn -> ("敵のターン", "state-enemy-turn")
+                BattleOver -> ("バトル終了", "state-battle-over")
+    in
+    div [ class ("battle-state " ++ stateClass) ]
+        [ text stateText ]
 
 -- スコアカード表示
 viewScoreCard : Battle -> Html Msg
@@ -148,7 +157,7 @@ viewScoreCard battle =
 viewScoreValue : Battle -> ScoreType -> String
 viewScoreValue battle scoreType =
     if isScoreAvailable scoreType battle.scoreHistory then
-        String.fromInt (calculateScore scoreType battle.dice)
+        String.fromInt (calculateScoreValue scoreType battle.dice)
     else
         "✓"  -- 使用済みの場合はチェックマーク表示
 
@@ -174,17 +183,17 @@ viewScoreRow battle label value scoreType =
         ]
 
 -- バトルフッター（バトルログエリア）
-viewBattleFooter : List String -> Html Msg
-viewBattleFooter logs =
+viewBattleFooter : List { message : String, timestamp : Time.Posix } -> Html Msg
+viewBattleFooter logEntries =
     div [ class "battle-footer" ]
         [ div [ class "battle-log" ]
             [ h3 [] [ text "バトルログ" ]
             , div [ class "log-entries" ]
-                (List.map viewLogEntry (List.take 5 logs))
+                (List.map viewLogEntry (List.take 5 logEntries))
             ]
         ]
 
 -- ログエントリー表示
-viewLogEntry : String -> Html Msg
-viewLogEntry log =
-    div [ class "log-entry" ] [ text log ]
+viewLogEntry : { message : String, timestamp : Time.Posix } -> Html Msg
+viewLogEntry logEntry =
+    div [ class "log-entry" ] [ text logEntry.message ]

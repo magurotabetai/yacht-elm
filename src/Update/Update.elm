@@ -1,98 +1,90 @@
-module Update.Update exposing (update, init)
+module Update.Update exposing (init, update)
 
-import Browser.Dom as Dom
-import Models.Character exposing (Character)
-import Models.Dice exposing (rollMultipleDice, toggleHold)
-import Models.Game exposing (GameState, Run, Battle, initGameState, startNewRun, startBattle)
-import Models.Map exposing (moveToNode, getAvailableNodes)
-import Models.Score exposing (markScoreUsed, isScoreAvailable, calculateScore)
-import Models.Score.DamageCalculator exposing (calculateDamageFromScore)
-import Models.Types exposing (GamePhase(..), NodeType(..), ScoreType(..), EnemyData, BossData, AttackData)
+import Browser
+import Models.Battle.Logic as BattleLogic
+import Models.Battle.Types exposing (BattleState(..))
+import Models.Character.Characters exposing (availableCharacters)
+import Models.Game as Game exposing (GameState)
+import Models.Score as Score
+import Models.Types exposing (GamePhase(..))
+import Process
 import Random
 import Task
 import Time
 import Update.Messages exposing (Msg(..))
 
--- 初期化関数
+
+-- INITIALIZATION
+
 init : () -> ( GameState, Cmd Msg )
 init _ =
-    ( initGameState 0
+    -- Initialize with current timestamp as seed
+    ( Game.initGameState 0
     , Task.perform Initialize Time.now
     )
 
--- アプリケーション更新関数
+
+-- UPDATE
+
 update : Msg -> GameState -> ( GameState, Cmd Msg )
 update msg model =
     case msg of
         NoOp ->
             ( model, Cmd.none )
 
+        -- System messages
         Initialize time ->
+            -- Use current time to seed the random number generator
             let
-                initialSeed = Time.posixToMillis time
-                initializedModel = initGameState initialSeed
+                seed =
+                    time |> Time.posixToMillis |> Random.initialSeed
+
+                newModel =
+                    { model | seed = seed }
             in
-            ( initializedModel, Cmd.none )
+            ( newModel, Cmd.none )
 
-        TickTime _ ->
-            -- 時間経過に関する処理（アニメーションなど）
+        TickTime newTime ->
+            -- Update time in the model, could be used for animations, etc.
             ( model, Cmd.none )
 
-        WindowResize _ _ ->
-            -- ウィンドウサイズ変更時の処理
+        WindowResize width height ->
+            -- Handle window resize events
             ( model, Cmd.none )
 
-        -- ゲーム進行関連
+        -- Game flow messages
         StartGame ->
+            -- Move to character selection screen
             ( { model | gamePhase = CharacterSelection }, Cmd.none )
 
         SelectCharacter character ->
-            startNewRun character model
+            -- Start a new run with the selected character
+            Game.startNewRun character.id model
 
         BackToMainMenu ->
+            -- Return to main menu
             ( { model | gamePhase = MainMenu }, Cmd.none )
 
-        -- マップ関連
-        EnterNode nodeId ->
-            case model.currentRun of
-                Just run ->
-                    let
-                        -- ノードに移動
-                        updatedMap = moveToNode nodeId run.map
-                        updatedRun = { run | map = updatedMap }
-
-                        -- ノードの種類に応じた処理
-                        ( nextPhase, cmd ) = handleNodeEntry nodeId updatedRun model.seed
-                    in
-                    ( { model | currentRun = Just updatedRun, gamePhase = nextPhase, seed = Tuple.second cmd }, Tuple.first cmd )
-
-                Nothing ->
-                    ( model, Cmd.none )
-
-        MoveToNode node ->
-            case model.currentRun of
-                Just run ->
-                    let
-                        updatedMap = moveToNode node.id run.map
-                        updatedRun = { run | map = updatedMap }
-                    in
-                    ( { model | currentRun = Just updatedRun }, Cmd.none )
-
-                Nothing ->
-                    ( model, Cmd.none )
-
-        -- バトル関連
+        -- Battle actions
         StartBattle ->
             case model.currentRun of
                 Just run ->
-                    case getCurrentNodeEnemy run of
-                        Just ( enemy, boss ) ->
+                    case model.gamePhase of
+                        InRun ->
+                            -- For now we'll just start a battle with a random enemy (slime)
                             let
-                                ( updatedRun, cmd ) = startBattle enemy boss run
+                                ( updatedRun, newSeed ) =
+                                    Game.startBattle "slime" run model.seed
                             in
-                            ( { model | currentRun = Just updatedRun, gamePhase = BattlePhase }, cmd )
+                            ( { model
+                                | currentRun = Just updatedRun
+                                , gamePhase = BattlePhase
+                                , seed = newSeed
+                              }
+                            , Cmd.none
+                            )
 
-                        Nothing ->
+                        _ ->
                             ( model, Cmd.none )
 
                 Nothing ->
@@ -103,21 +95,20 @@ update msg model =
                 Just run ->
                     case run.currentBattle of
                         Just battle ->
-                            if battle.remainingRerolls > 0 then
+                            if battle.state == Rolling then
                                 let
-                                    generator = rollMultipleDice battle.dice
-                                    ( newDice, newSeed ) = Random.step generator model.seed
-
-                                    updatedBattle =
-                                        { battle
-                                        | dice = newDice
-                                        , remainingRerolls = battle.remainingRerolls - 1
-                                        }
+                                    ( updatedBattle, newSeed ) =
+                                        BattleLogic.rerollDice battle model.seed
 
                                     updatedRun =
                                         { run | currentBattle = Just updatedBattle }
                                 in
-                                ( { model | currentRun = Just updatedRun, seed = newSeed }, Cmd.none )
+                                ( { model
+                                    | currentRun = Just updatedRun
+                                    , seed = newSeed
+                                  }
+                                , Cmd.none
+                                )
                             else
                                 ( model, Cmd.none )
 
@@ -127,47 +118,15 @@ update msg model =
                 Nothing ->
                     ( model, Cmd.none )
 
-        ToggleHoldDice id ->
+        ToggleHoldDice diceId ->
             case model.currentRun of
                 Just run ->
                     case run.currentBattle of
                         Just battle ->
-                            let
-                                updatedDice =
-                                    battle.dice
-                                        |> List.map
-                                            (\dice ->
-                                                if dice.id == id then
-                                                    toggleHold dice
-                                                else
-                                                    dice
-                                            )
-
-                                updatedBattle =
-                                    { battle | dice = updatedDice }
-
-                                updatedRun =
-                                    { run | currentBattle = Just updatedBattle }
-                            in
-                            ( { model | currentRun = Just updatedRun }, Cmd.none )
-
-                        Nothing ->
-                            ( model, Cmd.none )
-
-                Nothing ->
-                    ( model, Cmd.none )
-
-        SelectScore scoreType ->
-            case model.currentRun of
-                Just run ->
-                    case run.currentBattle of
-                        Just battle ->
-                            -- スコアが使用可能なときだけ選択できる
-                            if isScoreAvailable scoreType battle.scoreHistory then
+                            if battle.state == Rolling then
                                 let
-                                    -- スコアを選択するだけで確定はしない
                                     updatedBattle =
-                                        { battle | selectedScoreType = Just scoreType }
+                                        BattleLogic.toggleHoldDice diceId battle
 
                                     updatedRun =
                                         { run | currentBattle = Just updatedBattle }
@@ -182,26 +141,28 @@ update msg model =
                 Nothing ->
                     ( model, Cmd.none )
 
-        EndTurn ->
-            -- ターン終了処理（スコア選択なしでターンを終える場合）
-            ( model, Cmd.none )
-
-        UseActiveItem itemId ->
-            -- アイテム使用処理（実装予定）
-            ( model, Cmd.none )
-
-        FinishBattle isVictory ->
-            -- 戦闘終了処理
+        SelectScore scoreType ->
             case model.currentRun of
                 Just run ->
-                    let
-                        updatedRun =
-                            { run
-                            | currentBattle = Nothing
-                            , battlesWon = if isVictory then run.battlesWon + 1 else run.battlesWon
-                            }
-                    in
-                    ( { model | currentRun = Just updatedRun, gamePhase = InRun }, Cmd.none )
+                    case run.currentBattle of
+                        Just battle ->
+                            if battle.state == Selecting || battle.state == Rolling then
+                                if Score.isScoreAvailable scoreType battle.scoreHistory then
+                                    let
+                                        updatedBattle =
+                                            BattleLogic.selectScore scoreType battle
+
+                                        updatedRun =
+                                            { run | currentBattle = Just updatedBattle }
+                                    in
+                                    ( { model | currentRun = Just updatedRun }, Cmd.none )
+                                else
+                                    ( model, Cmd.none )
+                            else
+                                ( model, Cmd.none )
+
+                        Nothing ->
+                            ( model, Cmd.none )
 
                 Nothing ->
                     ( model, Cmd.none )
@@ -212,104 +173,11 @@ update msg model =
                     case run.currentBattle of
                         Just battle ->
                             case battle.selectedScoreType of
-                                Just scoreType ->
-                                    -- スコアが使用可能なときだけ確定できる
-                                    if isScoreAvailable scoreType battle.scoreHistory then
-                                        let
-                                            -- スコア履歴を更新（使用済みに設定）
-                                            updatedScoreHistory =
-                                                markScoreUsed scoreType battle.scoreHistory
-
-                                            -- 選択したスコアタイプに基づいてダメージを計算
-                                            scoreDamage = calculateDamageFromScore scoreType battle.dice
-
-                                            updatedEnemy =
-                                                { id = battle.enemy.id
-                                                , name = battle.enemy.name
-                                                , hp = max 0 (battle.enemy.hp - scoreDamage)
-                                                , maxHp = battle.enemy.maxHp
-                                                , attacks = battle.enemy.attacks
-                                                , scoreBonus = battle.enemy.scoreBonus
-                                                , rewards = battle.enemy.rewards
-                                                }
-
-                                            -- バトルログを更新
-                                            updatedLog =
-                                                ("プレイヤーは " ++ String.fromInt scoreDamage ++ " ダメージを与えた！")
-                                                    :: battle.battleLog
-
-                                            -- 敵のHPがゼロになった場合は勝利
-                                            ( gamePhase, finalLog, finalEnemy ) =
-                                                if updatedEnemy.hp <= 0 then
-                                                    ( InRun
-                                                    , "敵を倒した！勝利！" :: updatedLog
-                                                    , { updatedEnemy | hp = 0 }
-                                                    )
-                                                else
-                                                    -- 敵の攻撃を処理
-                                                    let
-                                                        attackIndex = modBy (List.length battle.enemy.attacks) battle.turn
-                                                        attack =
-                                                            battle.enemy.attacks
-                                                                |> List.drop attackIndex
-                                                                |> List.head
-                                                                |> Maybe.withDefault { name = "攻撃", damage = 1, description = "" }
-
-                                                        enemyAttackLog = battle.enemy.name ++ "の" ++ attack.name ++ "! " ++ String.fromInt attack.damage ++ "ダメージ！"
-                                                    in
-                                                    ( BattlePhase, enemyAttackLog :: updatedLog, updatedEnemy )
-
-                                            -- 全てのダイスの保持状態を解除して新たに生成するための準備
-                                            preparedDice =
-                                                battle.dice
-                                                    |> List.map (\dice -> { dice | held = False })
-
-                                            -- 新しいダイスロールのジェネレーターを作成
-                                            diceRollGenerator = rollMultipleDice preparedDice
-
-                                            -- 乱数シードを使ってダイスを振る
-                                            ( rolledDice, newSeed ) = Random.step diceRollGenerator model.seed
-
-                                            -- 戦闘情報を更新
-                                            updatedBattle =
-                                                let
-                                                    -- キャラクターに基づいてリロール回数を決定
-                                                    maxRerolls =
-                                                        if run.characterId == "lucky_roller" then
-                                                            3  -- ラッキーローラーは3回リロール可能
-                                                        else
-                                                            2  -- その他のキャラクターは2回
-                                                in
-                                                { battle
-                                                | scoreHistory = updatedScoreHistory
-                                                , enemy = finalEnemy
-                                                , turn = battle.turn + 1
-                                                , remainingRerolls = maxRerolls  -- リロール回数をリセット
-                                                , maxRerolls = maxRerolls  -- 最大リロール回数を設定
-                                                , battleLog = finalLog
-                                                , selectedScoreType = Nothing  -- 選択状態をリセット
-                                                , dice = rolledDice  -- 新たにランダムに振られたダイス
-                                                }
-
-                                            updatedRun =
-                                                if gamePhase == InRun then
-                                                    -- 戦闘終了の場合
-                                                    { run
-                                                    | currentBattle = Nothing
-                                                    , battlesWon = run.battlesWon + 1
-                                                    , gold = run.gold + 10  -- 仮の獲得ゴールド
-                                                    }
-                                                else
-                                                    -- 戦闘継続
-                                                    { run | currentBattle = Just updatedBattle }
-                                        in
-                                        ( { model | currentRun = Just updatedRun, gamePhase = gamePhase, seed = newSeed }, Cmd.none )
-                                    else
-                                        -- すでに使用済みのスコアは選択できない
-                                        ( model, Cmd.none )
+                                Just _ ->
+                                    -- Get current time for the battle log
+                                    ( model, Task.perform (\time -> ConfirmScoreWithTime time) Time.now )
 
                                 Nothing ->
-                                    -- スコアが選択されていない場合は何もしない
                                     ( model, Cmd.none )
 
                         Nothing ->
@@ -318,101 +186,157 @@ update msg model =
                 Nothing ->
                     ( model, Cmd.none )
 
-        -- その他のメッセージに対する処理
+        ConfirmScoreWithTime time ->
+            case model.currentRun of
+                Just run ->
+                    case run.currentBattle of
+                        Just battle ->
+                            let
+                                updatedBattle =
+                                    BattleLogic.confirmScore battle time
+
+                                isBattleOver =
+                                    BattleLogic.isBattleOver updatedBattle
+
+                                updatedRun =
+                                    { run | currentBattle = Just updatedBattle }
+
+                                updatedModel =
+                                    { model | currentRun = Just updatedRun }
+                            in
+                            if isBattleOver then
+                                -- Battle is over, check result
+                                case BattleLogic.getBattleResult updatedBattle of
+                                    Just True ->
+                                        -- Player won
+                                        let
+                                            runWithBattleWon =
+                                                { updatedRun
+                                                    | battlesWon = updatedRun.battlesWon + 1
+                                                    , currentHP = updatedBattle.playerCurrentHP
+                                                    , currentBattle = Nothing
+                                                }
+                                        in
+                                        ( { updatedModel
+                                            | currentRun = Just runWithBattleWon
+                                            , gamePhase = InRun
+                                          }
+                                        , Cmd.none
+                                        )
+
+                                    Just False ->
+                                        -- Player lost
+                                        ( { updatedModel | gamePhase = GameOver }, Cmd.none )
+
+                                    Nothing ->
+                                        -- Battle continues
+                                        ( updatedModel, Cmd.none )
+                            else
+                                -- Battle continues, enemy's turn
+                                -- Normally we'd calculate the enemy's attack, for now use a fixed value
+                                let
+                                    -- Delay the enemy's attack for better UX
+                                    enemyAttackCmd =
+                                        Process.sleep 1000
+                                            |> Task.andThen (\_ -> Task.succeed (EnemyAttack 3))
+                                            |> Task.perform identity
+                                in
+                                ( updatedModel, enemyAttackCmd )
+
+                        Nothing ->
+                            ( model, Cmd.none )
+
+                Nothing ->
+                    ( model, Cmd.none )
+
+        EndTurn ->
+            case model.currentRun of
+                Just run ->
+                    case run.currentBattle of
+                        Just battle ->
+                            if battle.state == EnemyTurn then
+                                let
+                                    updatedBattle =
+                                        BattleLogic.endTurn battle
+
+                                    updatedRun =
+                                        { run | currentBattle = Just updatedBattle }
+
+                                    -- Roll dice for the new turn
+                                    ( battleWithRolledDice, newSeed ) =
+                                        BattleLogic.rollDice updatedBattle model.seed
+
+                                    finalRun =
+                                        { updatedRun | currentBattle = Just battleWithRolledDice }
+                                in
+                                ( { model
+                                    | currentRun = Just finalRun
+                                    , seed = newSeed
+                                  }
+                                , Cmd.none
+                                )
+                            else
+                                ( model, Cmd.none )
+
+                        Nothing ->
+                            ( model, Cmd.none )
+
+                Nothing ->
+                    ( model, Cmd.none )
+
+        EnemyAttack damage ->
+            case model.currentRun of
+                Just run ->
+                    case run.currentBattle of
+                        Just battle ->
+                            if battle.state == EnemyTurn then
+                                -- Get current time for the battle log
+                                ( model, Task.perform (\time -> EnemyAttackWithTime damage time) Time.now )
+                            else
+                                ( model, Cmd.none )
+
+                        Nothing ->
+                            ( model, Cmd.none )
+
+                Nothing ->
+                    ( model, Cmd.none )
+
+        EnemyAttackWithTime damage time ->
+            case model.currentRun of
+                Just run ->
+                    case run.currentBattle of
+                        Just battle ->
+                            let
+                                updatedBattle =
+                                    BattleLogic.applyEnemyAction battle damage time
+
+                                isBattleOver =
+                                    BattleLogic.isBattleOver updatedBattle
+
+                                updatedRun =
+                                    { run | currentBattle = Just updatedBattle }
+                            in
+                            if isBattleOver then
+                                -- Player lost
+                                ( { model
+                                    | currentRun = Just updatedRun
+                                    , gamePhase = GameOver
+                                  }
+                                , Cmd.none
+                                )
+                            else
+                                -- Battle continues, player's turn
+                                ( { model | currentRun = Just updatedRun }
+                                , Task.perform (\_ -> EndTurn) (Process.sleep 500)
+                                )
+
+                        Nothing ->
+                            ( model, Cmd.none )
+
+                Nothing ->
+                    ( model, Cmd.none )
+
+        -- Other messages
         _ ->
+            -- For now, handle other messages as no-op
             ( model, Cmd.none )
-
--- ヘルパー関数：現在のノードから敵情報を取得
-getCurrentNodeEnemy : Run -> Maybe ( EnemyData, Maybe BossData )
-getCurrentNodeEnemy run =
-    let
-        currentFloorLevel = run.map.currentPosition.floorLevel
-        currentNodeId = run.map.currentPosition.nodeId
-
-        currentFloor =
-            run.map.floors
-                |> List.filter (\floor -> floor.level == currentFloorLevel)
-                |> List.head
-
-        findNode =
-            \nodes ->
-                nodes
-                    |> List.filter (\node -> node.id == currentNodeId)
-                    |> List.head
-    in
-    case currentFloor of
-        Just floor ->
-            case findNode floor.nodes of
-                Just node ->
-                    case node.nodeType of
-                        BattleNode enemy ->
-                            Just ( enemy, Nothing )
-
-                        EliteBattleNode enemy ->
-                            Just ( enemy, Nothing )
-
-                        BossNode boss ->
-                            Just ( boss.enemy, Just boss )
-
-                        _ ->
-                            Nothing
-
-                Nothing ->
-                    Nothing
-
-        Nothing ->
-            Nothing
-
--- ノード進入時の処理
-handleNodeEntry : String -> Run -> Random.Seed -> ( GamePhase, ( Cmd Msg, Random.Seed ) )
-handleNodeEntry nodeId run seed =
-    let
-        currentFloorLevel = run.map.currentPosition.floorLevel
-
-        findNode =
-            \nodes ->
-                nodes
-                    |> List.filter (\node -> node.id == nodeId)
-                    |> List.head
-
-        currentFloor =
-            run.map.floors
-                |> List.filter (\floor -> floor.level == currentFloorLevel)
-                |> List.head
-    in
-    case currentFloor of
-        Just floor ->
-            case findNode floor.nodes of
-                Just node ->
-                    case node.nodeType of
-                        BattleNode enemy ->
-                            ( BattlePhase, ( Task.perform (\_ -> StartBattle) (Task.succeed ()), seed ) )
-
-                        EliteBattleNode enemy ->
-                            ( BattlePhase, ( Task.perform (\_ -> StartBattle) (Task.succeed ()), seed ) )
-
-                        BossNode boss ->
-                            ( BattlePhase, ( Task.perform (\_ -> StartBattle) (Task.succeed ()), seed ) )
-
-                        RestNode ->
-                            -- 休憩ポイント：HPを少し回復
-                            ( InRun, ( Cmd.none, seed ) )
-
-                        MerchantNode ->
-                            -- 商人ノード：アイテム購入画面へ
-                            ( InRun, ( Cmd.none, seed ) )
-
-                        TreasureNode ->
-                            -- 宝箱ノード：アイテム獲得
-                            ( InRun, ( Cmd.none, seed ) )
-
-                        EventNode eventType ->
-                            -- イベントノード：各種イベント TODO
-                            -- ( EventPhase, ( Cmd.none, seed ) )
-                            ( InRun, ( Cmd.none, seed ) )
-
-                Nothing ->
-                    ( InRun, ( Cmd.none, seed ) )
-
-        Nothing ->
-            ( InRun, ( Cmd.none, seed ) )

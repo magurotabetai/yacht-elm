@@ -6,7 +6,7 @@ module Models.Score.DamageCalculator exposing
     )
 
 import Models.Types exposing (ScoreType(..))
-import Models.Score exposing (ScoreCard, sumOfFace, sumAllDice, calculateFourOfKind, calculateFullHouse, calculateSmallStraight, calculateLargeStraight, calculateYacht)
+import Models.Score exposing (calculateScoreValue, sumOfFace, sumAllDice)
 import Models.Dice exposing (Dice)
 
 -- スコア倍率を表す型
@@ -62,24 +62,7 @@ calculateDamageFromScore : ScoreType -> List Dice -> Int
 calculateDamageFromScore scoreType dice =
     let
         -- ダイスの出目から直接スコアを計算
-        scoreValue =
-            case scoreType of
-                Aces -> sumOfFace 1 dice
-                Twos -> sumOfFace 2 dice
-                Threes -> sumOfFace 3 dice
-                Fours -> sumOfFace 4 dice
-                Fives -> sumOfFace 5 dice
-                Sixes -> sumOfFace 6 dice
-                Choice -> sumAllDice dice
-                FourOfKind -> calculateFourOfKind dice
-                FullHouse -> calculateFullHouse dice
-                SmallStraight -> calculateSmallStraight dice
-                LargeStraight -> calculateLargeStraight dice
-                Yacht -> calculateYacht dice
-                Special _ ->
-                    -- 特殊スコアの場合はデフォルト値を返す
-                    -- 本来は特殊スコア計算ロジックが必要
-                    10
+        scoreValue = calculateScoreValue scoreType dice
 
         -- 倍率を適用したダメージ計算
         finalDamage = round (toFloat scoreValue * getScoreMultiplier scoreType)

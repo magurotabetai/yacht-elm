@@ -1,8 +1,25 @@
-module Models.Types exposing (..)
+module Models.Types exposing
+    ( GamePhase(..)
+    , ScoreType(..)
+    , ScoreHistory
+    , DiceType(..)
+    , DiceEffect(..)
+    , initScoreHistory
+    )
 
 import Time
 
--- ダイス関連の型定義
+-- Game phases representing distinct application states
+type GamePhase
+    = MainMenu
+    | CharacterSelection
+    | InRun
+    | BattlePhase
+    | EventPhase
+    | GameOver
+    | Victory
+
+-- Dice-related types - core value objects
 type DiceType
     = Normal
     | FireDice
@@ -18,7 +35,7 @@ type DiceEffect
     | RerollOnce
     | AddBonus Int
 
--- スコア関連の型定義
+-- Score-related types
 type ScoreType
     = Aces
     | Twos
@@ -34,7 +51,7 @@ type ScoreType
     | Yacht
     | Special String
 
--- スコア履歴管理のための型定義
+-- Score tracking history (Value Object)
 type alias ScoreHistory =
     { aces : Bool
     , twos : Bool
@@ -49,6 +66,24 @@ type alias ScoreHistory =
     , largeStraight : Bool
     , yacht : Bool
     , specialScores : List String -- 使用済み特殊スコアのID
+    }
+
+-- Initialize empty score history
+initScoreHistory : ScoreHistory
+initScoreHistory =
+    { aces = False
+    , twos = False
+    , threes = False
+    , fours = False
+    , fives = False
+    , sixes = False
+    , choice = False
+    , fourOfKind = False
+    , fullHouse = False
+    , smallStraight = False
+    , largeStraight = False
+    , yacht = False
+    , specialScores = []
     }
 
 -- アイテム関連の型定義
@@ -155,13 +190,3 @@ type EventType
 type ScoreBonus
     = BonusType ScoreType Int
     | PenaltyType ScoreType Int
-
--- ゲーム状態関連の型定義
-type GamePhase
-    = MainMenu
-    | CharacterSelection
-    | InRun
-    | BattlePhase
-    | EventPhase
-    | GameOver
-    | Victory
