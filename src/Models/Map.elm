@@ -1,34 +1,45 @@
 module Models.Map exposing
-    ( Map
-    , Floor
+    ( Floor
+    , Map
     , Node
     , NodeType(..)
     , Position
-    , initMap
-    , moveToNode
     , getAvailableNodes
+    , initMap
     , isMapCompleted
+    , moveToNode
     )
 
 import Models.Enemy.Types exposing (Enemy)
 import Random
 
--- TYPES
 
+
+-- TYPES
 -- Map - Aggregate root for the map domain
+
+
 type alias Map =
     { floors : List Floor
     , currentPosition : NodePosition
     }
 
+
+
 -- Floor - Value object representing a level in the game
+
+
 type alias Floor =
     { level : Int
     , nodes : List Node
     , connections : List Connection
     }
 
+
+
 -- Node - Value object representing a location on the map
+
+
 type alias Node =
     { id : String
     , nodeType : NodeType
@@ -36,17 +47,25 @@ type alias Node =
     , visited : Bool
     }
 
+
+
 -- Node types - Value objects for different location types
+
+
 type NodeType
-    = BattleNode String       -- Enemy ID
-    | EliteBattleNode String  -- Elite Enemy ID
+    = BattleNode String -- Enemy ID
+    | EliteBattleNode String -- Elite Enemy ID
     | RestNode
     | MerchantNode
     | TreasureNode
     | EventNode EventType
-    | BossNode String         -- Boss ID
+    | BossNode String -- Boss ID
+
+
 
 -- Event types - Value objects for different event scenarios
+
+
 type EventType
     = RandomReward
     | MysteryDice
@@ -54,32 +73,50 @@ type EventType
     | UpgradeItem
     | SpecialEncounter String
 
+
+
 -- Connection - Value object representing paths between nodes
+
+
 type alias Connection =
     { from : String
     , to : String
     }
 
+
+
 -- Position - Value object for spatial placement
+
+
 type alias Position =
     { x : Float
     , y : Float
     }
 
+
+
 -- Current position tracking - Value object
+
+
 type alias NodePosition =
     { floorLevel : Int
     , nodeId : String
     }
 
--- INITIALIZATION
 
+
+-- INITIALIZATION
 -- Initialize a new map
+
+
 initMap : Random.Seed -> ( Map, Random.Seed )
 initMap seed =
     let
-        initialFloors = [ createFirstFloor ]
-        initialPosition = { floorLevel = 1, nodeId = "start" }
+        initialFloors =
+            [ createFirstFloor ]
+
+        initialPosition =
+            { floorLevel = 1, nodeId = "start" }
     in
     ( { floors = initialFloors
       , currentPosition = initialPosition
@@ -87,7 +124,11 @@ initMap seed =
     , seed
     )
 
+
+
 -- Create the first floor with a predefined layout
+
+
 createFirstFloor : Floor
 createFirstFloor =
     let
@@ -159,39 +200,53 @@ createFirstFloor =
     , connections = connections
     }
 
--- MAP OPERATIONS
 
+
+-- MAP OPERATIONS
 -- Move to a new node on the map
+
+
 moveToNode : String -> Map -> Map
 moveToNode nodeId map =
     let
-        currentFloorLevel = map.currentPosition.floorLevel
+        currentFloorLevel =
+            map.currentPosition.floorLevel
 
         updateNode node =
             if node.id == nodeId then
                 { node | visited = True }
+
             else
                 node
 
         updateFloor floor =
             if floor.level == currentFloorLevel then
                 { floor | nodes = List.map updateNode floor.nodes }
+
             else
                 floor
 
-        updatedFloors = List.map updateFloor map.floors
-        updatedPosition = { floorLevel = currentFloorLevel, nodeId = nodeId }
+        updatedFloors =
+            List.map updateFloor map.floors
+
+        updatedPosition =
+            { floorLevel = currentFloorLevel, nodeId = nodeId }
     in
     { map | floors = updatedFloors, currentPosition = updatedPosition }
 
+
+
 -- Get nodes that can be visited from the current position
+
+
 getAvailableNodes : Map -> List Node
 getAvailableNodes map =
     let
-        currentPosition = map.currentPosition
+        currentPosition =
+            map.currentPosition
 
         -- Find all connected node IDs
-        connectedIds = 
+        connectedIds =
             map.floors
                 |> List.filter (\floor -> floor.level == currentPosition.floorLevel)
                 |> List.concatMap .connections
@@ -207,15 +262,22 @@ getAvailableNodes map =
     in
     availableNodes
 
+
+
 -- Check if the map is completed (boss node visited)
+
+
 isMapCompleted : Map -> Bool
 isMapCompleted map =
     let
         isBossNode node =
             case node.nodeType of
-                BossNode _ -> True
-                _ -> False
-                
+                BossNode _ ->
+                    True
+
+                _ ->
+                    False
+
         isBossVisited =
             map.floors
                 |> List.concatMap .nodes

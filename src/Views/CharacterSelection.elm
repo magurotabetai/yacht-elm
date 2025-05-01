@@ -1,14 +1,13 @@
 module Views.CharacterSelection exposing (view)
 
 import Html exposing (Html, div, h1, h2, img, p, text)
-import Html.Attributes exposing (class, src, alt)
+import Html.Attributes exposing (alt, class, src)
 import Html.Events exposing (onClick)
-import Models.Character.Types exposing (Character)
 import Models.Character.Characters exposing (availableCharacters)
-import Models.Character.Types exposing (characterAbilityToString)
+import Models.Character.Types exposing (Character, characterAbilityToString)
 import Models.Game exposing (GameState)
 import Update.Messages exposing (Msg(..))
-import Views.Helpers exposing (viewButton, viewCard, spacer)
+import Views.Helpers exposing (spacer, viewButton, viewCard)
 
 
 view : GameState -> Html Msg
@@ -24,7 +23,11 @@ view gameState =
             [ viewButton "戻る" BackToMainMenu False ]
         ]
 
+
+
 -- キャラクターカードの表示
+
+
 viewCharacterCard : Character -> Html Msg
 viewCharacterCard character =
     div
@@ -52,7 +55,11 @@ viewCharacterCard character =
             ]
         ]
 
+
+
 -- キャラクターのステータス表示
+
+
 viewCharacterStats : Character -> Html Msg
 viewCharacterStats character =
     div [ class "character-stats" ]

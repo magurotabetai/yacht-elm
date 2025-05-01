@@ -4,7 +4,7 @@ import Html exposing (Html, div, h1, h2, p, text)
 import Html.Attributes exposing (class)
 import Models.Game exposing (GameState)
 import Update.Messages exposing (Msg(..))
-import Views.Helpers exposing (viewButton, spacer)
+import Views.Helpers exposing (spacer, viewButton)
 
 
 viewMainMenu : GameState -> Html Msg
@@ -27,7 +27,15 @@ viewMainMenu gameState =
             ]
         ]
 
+
+
 -- セーブデータが存在するかどうかのチェック（仮実装）
+
+
 hasExistingSave : GameState -> Bool
 hasExistingSave gameState =
-    False  -- 実際にはローカルストレージの確認などを行う
+    False
+
+
+
+-- 実際にはローカルストレージの確認などを行う

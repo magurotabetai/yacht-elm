@@ -1,8 +1,8 @@
 module Models.Enemy.Repository exposing
-    ( getEnemyById
-    , getNormalEnemies
+    ( getBosses
     , getEliteEnemies
-    , getBosses
+    , getEnemyById
+    , getNormalEnemies
     , getRandomEnemy
     )
 
@@ -11,7 +11,11 @@ import Models.Enemy.Types exposing (..)
 import Models.Types exposing (ScoreType(..))
 import Random
 
+
+
 -- Enemy repository - Database of all enemies in the game
+
+
 enemyDatabase : Dict String Enemy
 enemyDatabase =
     Dict.fromList
@@ -110,24 +114,25 @@ enemyDatabase =
             , name = "ドラゴンキング"
             , description = "強大なドラゴン。複数の特殊フェーズを持つ。"
             , maxHP = 100
-            , enemyType = Boss 
-                { phases = 
-                    [ { hpThreshold = 70
-                      , name = "怒り"
-                      , description = "ドラゴンキングが怒り、攻撃力が上昇する"
-                      , attackBuff = 1.5
-                      , defenseBuff = 1.0
-                      , specialEffect = Just "炎上"
-                      }
-                    , { hpThreshold = 30
-                      , name = "暴走"
-                      , description = "ドラゴンキングが暴走し、全ての能力が上昇する"
-                      , attackBuff = 2.0
-                      , defenseBuff = 1.3
-                      , specialEffect = Just "リロール禁止"
-                      }
-                    ]
-                }
+            , enemyType =
+                Boss
+                    { phases =
+                        [ { hpThreshold = 70
+                          , name = "怒り"
+                          , description = "ドラゴンキングが怒り、攻撃力が上昇する"
+                          , attackBuff = 1.5
+                          , defenseBuff = 1.0
+                          , specialEffect = Just "炎上"
+                          }
+                        , { hpThreshold = 30
+                          , name = "暴走"
+                          , description = "ドラゴンキングが暴走し、全ての能力が上昇する"
+                          , attackBuff = 2.0
+                          , defenseBuff = 1.3
+                          , specialEffect = Just "リロール禁止"
+                          }
+                        ]
+                    }
             , attacks =
                 [ { name = "炎のブレス"
                   , baseDamage = 10
@@ -158,71 +163,109 @@ enemyDatabase =
                 { gold = 200
                 , xp = 500
                 , itemChance = 1.0
-                , guaranteedItems = ["dragon_scale"]
+                , guaranteedItems = [ "dragon_scale" ]
                 }
             }
           )
         ]
 
+
+
 -- Get an enemy by ID
+
+
 getEnemyById : String -> Maybe Enemy
 getEnemyById id =
     Dict.get id enemyDatabase
 
+
+
 -- Get all normal enemies
+
+
 getNormalEnemies : List Enemy
 getNormalEnemies =
     Dict.values enemyDatabase
-        |> List.filter (\enemy -> 
-            case enemy.enemyType of
-                Normal -> True
-                _ -> False
-           )
+        |> List.filter
+            (\enemy ->
+                case enemy.enemyType of
+                    Normal ->
+                        True
+
+                    _ ->
+                        False
+            )
+
+
 
 -- Get all elite enemies
+
+
 getEliteEnemies : List Enemy
 getEliteEnemies =
     Dict.values enemyDatabase
-        |> List.filter (\enemy -> 
-            case enemy.enemyType of
-                Elite -> True
-                _ -> False
-           )
+        |> List.filter
+            (\enemy ->
+                case enemy.enemyType of
+                    Elite ->
+                        True
+
+                    _ ->
+                        False
+            )
+
+
 
 -- Get all bosses
+
+
 getBosses : List Enemy
 getBosses =
     Dict.values enemyDatabase
-        |> List.filter (\enemy -> 
-            case enemy.enemyType of
-                Boss _ -> True
-                _ -> False
-           )
+        |> List.filter
+            (\enemy ->
+                case enemy.enemyType of
+                    Boss _ ->
+                        True
+
+                    _ ->
+                        False
+            )
+
+
 
 -- Get a random enemy of a specific type
-getRandomEnemy : Random.Seed -> (Maybe Enemy, Random.Seed)
+
+
+getRandomEnemy : Random.Seed -> ( Maybe Enemy, Random.Seed )
 getRandomEnemy seed =
     let
-        enemies = Dict.values enemyDatabase
-        
-        (index, newSeed) =
+        enemies =
+            Dict.values enemyDatabase
+
+        ( index, newSeed ) =
             Random.step (Random.int 0 (List.length enemies - 1)) seed
-            
+
         selectedEnemy =
             List.drop index enemies |> List.head
     in
-    (selectedEnemy, newSeed)
+    ( selectedEnemy, newSeed )
+
+
 
 -- Get a random normal enemy
-getRandomNormalEnemy : Random.Seed -> (Maybe Enemy, Random.Seed)
+
+
+getRandomNormalEnemy : Random.Seed -> ( Maybe Enemy, Random.Seed )
 getRandomNormalEnemy seed =
     let
-        normalEnemies = getNormalEnemies
-        
-        (index, newSeed) =
+        normalEnemies =
+            getNormalEnemies
+
+        ( index, newSeed ) =
             Random.step (Random.int 0 (List.length normalEnemies - 1)) seed
-            
+
         selectedEnemy =
             List.drop index normalEnemies |> List.head
     in
-    (selectedEnemy, newSeed)
+    ( selectedEnemy, newSeed )

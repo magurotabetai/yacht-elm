@@ -3,8 +3,8 @@ module Models.Game exposing
     , Player
     , Run
     , initGameState
-    , startNewRun
     , startBattle
+    , startNewRun
     )
 
 import Dict exposing (Dict)
@@ -22,9 +22,12 @@ import Models.Types exposing (GamePhase(..))
 import Random
 import Time
 
--- TYPES
 
+
+-- TYPES
 -- Main application state
+
+
 type alias GameState =
     { player : Player
     , currentRun : Maybe Run
@@ -33,7 +36,11 @@ type alias GameState =
     , settings : Settings
     }
 
+
+
 -- Player profile
+
+
 type alias Player =
     { id : String
     , name : String
@@ -41,7 +48,11 @@ type alias Player =
     , stats : PlayerStats
     }
 
+
+
 -- Player statistics
+
+
 type alias PlayerStats =
     { totalRuns : Int
     , bossesDefeated : List String
@@ -49,14 +60,18 @@ type alias PlayerStats =
     , totalGold : Int
     }
 
+
+
 -- A single game run
+
+
 type alias Run =
     { id : String
     , seed : Int
     , currentFloor : Int
     , map : Map
-    , inventory : List String  -- Item IDs
-    , equippedItems : List String  -- Equipped item IDs
+    , inventory : List String -- Item IDs
+    , equippedItems : List String -- Equipped item IDs
     , battlesWon : Int
     , currentHP : Int
     , maxHP : Int
@@ -65,43 +80,66 @@ type alias Run =
     , characterId : String
     }
 
+
+
 -- Game settings
+
+
 type alias Settings =
     { audio : AudioSettings
     , display : DisplaySettings
     , gameplay : GameplaySettings
     }
 
+
+
 -- Audio settings
+
+
 type alias AudioSettings =
     { musicVolume : Float
     , sfxVolume : Float
     , masterVolume : Float
     }
 
+
+
 -- Display settings
+
+
 type alias DisplaySettings =
     { resolution : String
     , fullscreen : Bool
     , effectQuality : String
     }
 
+
+
 -- Gameplay settings
+
+
 type alias GameplaySettings =
     { difficulty : Difficulty
     , tutorialEnabled : Bool
     }
 
+
+
 -- Difficulty levels
+
+
 type Difficulty
     = Easy
     | Normal
     | Hard
     | Nightmare
 
--- INITIALIZATION
 
+
+-- INITIALIZATION
 -- Initialize a new game state
+
+
 initGameState : Int -> GameState
 initGameState initialSeed =
     { player =
@@ -121,7 +159,11 @@ initGameState initialSeed =
     , settings = defaultSettings
     }
 
+
+
 -- Default game settings
+
+
 defaultSettings : Settings
 defaultSettings =
     { audio =
@@ -140,10 +182,13 @@ defaultSettings =
         }
     }
 
--- GAME ACTIONS
 
+
+-- GAME ACTIONS
 -- Start a new run with a selected character
-startNewRun : String -> GameState -> (GameState, Cmd msg)
+
+
+startNewRun : String -> GameState -> ( GameState, Cmd msg )
 startNewRun characterId gameState =
     let
         selectedCharacter =
@@ -163,7 +208,7 @@ startNewRun characterId gameState =
                 -- Get starting items
                 startingItems =
                     character.startingItemIds
-                
+
                 newRun =
                     { id = "run-" ++ String.fromInt randomSeed
                     , seed = randomSeed
@@ -207,11 +252,15 @@ startNewRun characterId gameState =
             -- Character not found
             ( gameState, Cmd.none )
 
+
+
 -- Start a battle with an enemy
-startBattle : String -> Run -> Random.Seed -> (Run, Random.Seed)
+
+
+startBattle : String -> Run -> Random.Seed -> ( Run, Random.Seed )
 startBattle enemyId run seed =
     let
-        enemyResult = 
+        enemyResult =
             EnemyRepo.getEnemyById enemyId
     in
     case enemyResult of
@@ -220,54 +269,66 @@ startBattle enemyId run seed =
             let
                 rerollCount =
                     if run.characterId == "lucky_roller" then
-                        3  -- Lucky Roller character gets more rerolls
+                        3
+                        -- Lucky Roller character gets more rerolls
+
                     else
-                        2  -- Standard reroll count
-                
+                        2
+
+                -- Standard reroll count
                 -- Create a fresh battle ID
-                (battleIdRandom, nextSeed) =
+                ( battleIdRandom, nextSeed ) =
                     Random.step (Random.int 10000 99999) seed
-                
+
                 battleId =
                     "battle-" ++ String.fromInt battleIdRandom
-                    
+
                 -- Initialize the battle
                 battle =
-                    initBattle 
-                        battleId 
-                        enemy.id 
-                        enemy.name 
-                        enemy.maxHP 
-                        enemy.maxHP 
-                        run.currentHP 
-                        run.maxHP 
+                    initBattle
+                        battleId
+                        enemy.id
+                        enemy.name
+                        enemy.maxHP
+                        enemy.maxHP
+                        run.currentHP
+                        run.maxHP
                         rerollCount
-                
+
                 -- Initial dice roll
-                (rolledBattle, rollSeed) =
-                    BattleLogic.rollDice 
-                        { battle | dice = standardDiceSet } 
+                ( rolledBattle, rollSeed ) =
+                    BattleLogic.rollDice
+                        { battle | dice = standardDiceSet }
                         nextSeed
-                        
+
                 -- Update the run with the new battle
                 updatedRun =
                     { run | currentBattle = Just rolledBattle }
             in
-            (updatedRun, rollSeed)
-            
+            ( updatedRun, rollSeed )
+
         Nothing ->
             -- Enemy not found, return unchanged
-            (run, seed)
+            ( run, seed )
+
+
 
 -- Find an item by ID from a list of inventory items
+
+
 getInventoryItem : String -> List String -> Maybe Item
 getInventoryItem itemId inventory =
     if List.member itemId inventory then
         ItemRepo.getItemById itemId
+
     else
         Nothing
 
+
+
 -- Get character by ID
+
+
 getCharacterById : String -> Maybe Character
 getCharacterById id =
     availableCharacters

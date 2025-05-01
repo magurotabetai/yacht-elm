@@ -14,7 +14,9 @@ import Time
 import Update.Messages exposing (Msg(..))
 
 
+
 -- INITIALIZATION
+
 
 init : () -> ( GameState, Cmd Msg )
 init _ =
@@ -24,7 +26,9 @@ init _ =
     )
 
 
+
 -- UPDATE
+
 
 update : Msg -> GameState -> ( GameState, Cmd Msg )
 update msg model =
@@ -109,6 +113,7 @@ update msg model =
                                   }
                                 , Cmd.none
                                 )
+
                             else
                                 ( model, Cmd.none )
 
@@ -132,6 +137,7 @@ update msg model =
                                         { run | currentBattle = Just updatedBattle }
                                 in
                                 ( { model | currentRun = Just updatedRun }, Cmd.none )
+
                             else
                                 ( model, Cmd.none )
 
@@ -156,8 +162,10 @@ update msg model =
                                             { run | currentBattle = Just updatedBattle }
                                     in
                                     ( { model | currentRun = Just updatedRun }, Cmd.none )
+
                                 else
                                     ( model, Cmd.none )
+
                             else
                                 ( model, Cmd.none )
 
@@ -231,6 +239,7 @@ update msg model =
                                     Nothing ->
                                         -- Battle continues
                                         ( updatedModel, Cmd.none )
+
                             else
                                 -- Battle continues, enemy's turn
                                 -- Normally we'd calculate the enemy's attack, for now use a fixed value
@@ -275,6 +284,7 @@ update msg model =
                                   }
                                 , Cmd.none
                                 )
+
                             else
                                 ( model, Cmd.none )
 
@@ -292,6 +302,7 @@ update msg model =
                             if battle.state == EnemyTurn then
                                 -- Get current time for the battle log
                                 ( model, Task.perform (\time -> EnemyAttackWithTime damage time) Time.now )
+
                             else
                                 ( model, Cmd.none )
 
@@ -324,6 +335,7 @@ update msg model =
                                   }
                                 , Cmd.none
                                 )
+
                             else
                                 -- Battle continues, player's turn
                                 ( { model | currentRun = Just updatedRun }

@@ -3,12 +3,20 @@ module Models.Character.Characters exposing (availableCharacters)
 import Models.Character.Types exposing (Character, CharacterAbility(..), UnlockCondition(..))
 import Models.Types exposing (ScoreType(..))
 
+
+
 -- Collection of all available characters in the game
+
+
 availableCharacters : List Character
-availableCharacters = 
+availableCharacters =
     [ luckyRoller, strategist ]
 
+
+
 -- Character: Lucky Roller
+
+
 luckyRoller : Character
 luckyRoller =
     { id = "lucky_roller"
@@ -22,7 +30,11 @@ luckyRoller =
     , unlockCondition = Just StarterCharacter
     }
 
+
+
 -- Character: Strategist
+
+
 strategist : Character
 strategist =
     { id = "strategist"

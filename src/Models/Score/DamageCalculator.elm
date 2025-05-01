@@ -1,22 +1,30 @@
 module Models.Score.DamageCalculator exposing
     ( ScoreMultiplier
-    , getScoreMultiplier
     , calculateDamageFromScore
     , formatMultiplier
+    , getScoreMultiplier
     )
 
-import Models.Types exposing (ScoreType(..))
-import Models.Score exposing (calculateScoreValue, sumOfFace, sumAllDice)
 import Models.Dice exposing (Dice)
+import Models.Score exposing (calculateScoreValue, sumAllDice, sumOfFace)
+import Models.Types exposing (ScoreType(..))
+
+
 
 -- スコア倍率を表す型
+
+
 type alias ScoreMultiplier =
     { scoreType : ScoreType
     , multiplier : Float
     , description : String
     }
 
+
+
 -- 全ての役に対する倍率定義
+
+
 scoreMultipliers : List ScoreMultiplier
 scoreMultipliers =
     [ { scoreType = Aces, multiplier = 1.0, description = "基本ダメージ" }
@@ -33,12 +41,17 @@ scoreMultipliers =
     , { scoreType = Yacht, multiplier = 2.0, description = "最大ボーナス" }
     ]
 
+
+
 -- 特定のスコアタイプの倍率を取得する
+
+
 getScoreMultiplier : ScoreType -> Float
 getScoreMultiplier scoreType =
     case scoreType of
         Special _ ->
             1.0
+
         _ ->
             scoreMultipliers
                 |> List.filter (\m -> m.scoreType == scoreType)
@@ -46,25 +59,41 @@ getScoreMultiplier scoreType =
                 |> Maybe.map .multiplier
                 |> Maybe.withDefault 1.0
 
+
+
 -- 倍率を文字列にフォーマットする
+
+
 formatMultiplier : ScoreType -> String
 formatMultiplier scoreType =
     let
-        multiplier = getScoreMultiplier scoreType
+        multiplier =
+            getScoreMultiplier scoreType
     in
     if multiplier > 1.0 then
         "×" ++ String.fromFloat multiplier
+
     else
         ""
 
+
+
 -- スコアからダメージを計算する
+
+
 calculateDamageFromScore : ScoreType -> List Dice -> Int
 calculateDamageFromScore scoreType dice =
     let
         -- ダイスの出目から直接スコアを計算
-        scoreValue = calculateScoreValue scoreType dice
+        scoreValue =
+            calculateScoreValue scoreType dice
 
         -- 倍率を適用したダメージ計算
-        finalDamage = round (toFloat scoreValue * getScoreMultiplier scoreType)
+        finalDamage =
+            round (toFloat scoreValue * getScoreMultiplier scoreType)
     in
-    max 1 finalDamage  -- 最低でも1ダメージは保証
+    max 1 finalDamage
+
+
+
+-- 最低でも1ダメージは保証

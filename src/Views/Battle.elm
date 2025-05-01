@@ -1,18 +1,22 @@
 module Views.Battle exposing (viewBattle)
 
-import Html exposing (Html, div, h1, h2, h3, p, text, button, span)
+import Html exposing (Html, button, div, h1, h2, h3, p, span, text)
 import Html.Attributes exposing (class, style)
 import Html.Events exposing (onClick)
-import Models.Game exposing (GameState, Run)
 import Models.Battle.Types exposing (Battle, BattleState(..))
+import Models.Game exposing (GameState, Run)
 import Models.Score exposing (calculateScoreValue, isScoreAvailable)
 import Models.Score.DamageCalculator exposing (formatMultiplier)
 import Models.Types exposing (ScoreType(..))
 import Time
 import Update.Messages exposing (Msg(..))
-import Views.Helpers exposing (viewButton, spacer, viewBadge)
+import Views.Helpers exposing (spacer, viewBadge, viewButton)
+
+
 
 -- バトル画面の表示
+
+
 viewBattle : GameState -> Run -> Battle -> Html Msg
 viewBattle gameState run battle =
     div [ class "battle-screen" ]
@@ -24,7 +28,11 @@ viewBattle gameState run battle =
         , viewBattleFooter battle.log.entries
         ]
 
+
+
 -- バトルヘッダー（敵情報と自分の情報）
+
+
 viewBattleHeader : Battle -> Html Msg
 viewBattleHeader battle =
     div [ class "battle-header" ]
@@ -32,17 +40,26 @@ viewBattleHeader battle =
         , viewPlayerInfo battle
         ]
 
+
+
 -- 敵の情報表示
+
+
 viewEnemyInfo : Battle -> Html Msg
 viewEnemyInfo battle =
     let
-        isEnemyBoss = String.contains "boss" battle.enemyId || String.contains "dragon" battle.enemyId
+        isEnemyBoss =
+            String.contains "boss" battle.enemyId || String.contains "dragon" battle.enemyId
     in
     div [ class "enemy-info" ]
         [ div [ class "enemy-header" ]
             [ h2 []
                 [ text battle.enemyName
-                , if isEnemyBoss then viewBadge "boss" "ボス" else text ""
+                , if isEnemyBoss then
+                    viewBadge "boss" "ボス"
+
+                  else
+                    text ""
                 ]
             ]
         , div [ class "health-bar" ]
@@ -56,7 +73,11 @@ viewEnemyInfo battle =
             [ text (String.fromInt battle.enemyCurrentHP ++ " / " ++ String.fromInt battle.enemyMaxHP) ]
         ]
 
+
+
 -- プレイヤー情報表示
+
+
 viewPlayerInfo : Battle -> Html Msg
 viewPlayerInfo battle =
     div [ class "player-info" ]
@@ -66,7 +87,11 @@ viewPlayerInfo battle =
             [ text ("ターン: " ++ String.fromInt battle.turn) ]
         ]
 
+
+
 -- バトルの左側エリア（ダイス、アクションエリア）
+
+
 viewBattleLeft : Battle -> Html Msg
 viewBattleLeft battle =
     div [ class "battle-left" ]
@@ -76,10 +101,10 @@ viewBattleLeft battle =
                 (List.map viewDice battle.dice)
             , div [ class "rerolls-info" ]
                 [ text
-                    ("残りリロール: " ++
-                        String.fromInt battle.remainingRerolls ++
-                        " / " ++
-                        String.fromInt battle.maxRerolls
+                    ("残りリロール: "
+                        ++ String.fromInt battle.remainingRerolls
+                        ++ " / "
+                        ++ String.fromInt battle.maxRerolls
                     )
                 ]
             ]
@@ -89,16 +114,32 @@ viewBattleLeft battle =
             ]
         ]
 
+
+
 -- ダイス表示
+
+
 viewDice : { id : String, value : Int, held : Bool, diceType : a, effects : b } -> Html Msg
 viewDice dice =
     div
-        [ class ("dice dice-normal" ++ if dice.held then " dice-held" else "")
+        [ class
+            ("dice dice-normal"
+                ++ (if dice.held then
+                        " dice-held"
+
+                    else
+                        ""
+                   )
+            )
         , onClick (ToggleHoldDice dice.id)
         ]
         [ text (String.fromInt dice.value) ]
 
+
+
 -- バトルの右側エリア（スコアカード、アイテムエリア）
+
+
 viewBattleRight : Battle -> Html Msg
 viewBattleRight battle =
     div [ class "battle-right" ]
@@ -115,21 +156,36 @@ viewBattleRight battle =
             ]
         ]
 
+
+
 -- バトル状態の表示
+
+
 viewBattleState : BattleState -> Html Msg
 viewBattleState state =
     let
-        (stateText, stateClass) =
+        ( stateText, stateClass ) =
             case state of
-                Rolling -> ("ダイスロール中", "state-rolling")
-                Selecting -> ("スコア選択中", "state-selecting")
-                EnemyTurn -> ("敵のターン", "state-enemy-turn")
-                BattleOver -> ("バトル終了", "state-battle-over")
+                Rolling ->
+                    ( "ダイスロール中", "state-rolling" )
+
+                Selecting ->
+                    ( "スコア選択中", "state-selecting" )
+
+                EnemyTurn ->
+                    ( "敵のターン", "state-enemy-turn" )
+
+                BattleOver ->
+                    ( "バトル終了", "state-battle-over" )
     in
     div [ class ("battle-state " ++ stateClass) ]
         [ text stateText ]
 
+
+
 -- スコアカード表示
+
+
 viewScoreCard : Battle -> Html Msg
 viewScoreCard battle =
     div [ class "score-sections" ]
@@ -153,27 +209,53 @@ viewScoreCard battle =
             ]
         ]
 
+
+
 -- スコア値の表示形式を決定
+
+
 viewScoreValue : Battle -> ScoreType -> String
 viewScoreValue battle scoreType =
     if isScoreAvailable scoreType battle.scoreHistory then
         String.fromInt (calculateScoreValue scoreType battle.dice)
-    else
-        "✓"  -- 使用済みの場合はチェックマーク表示
 
+    else
+        "✓"
+
+
+
+-- 使用済みの場合はチェックマーク表示
 -- スコア行表示
+
+
 viewScoreRow : Battle -> String -> String -> ScoreType -> Html Msg
 viewScoreRow battle label value scoreType =
     let
-        isAvailable = isScoreAvailable scoreType battle.scoreHistory
+        isAvailable =
+            isScoreAvailable scoreType battle.scoreHistory
+
         rowClass =
-            "score-row" ++
-            (if battle.selectedScoreType == Just scoreType then " selected-score" else "") ++
-            (if not isAvailable then " used-score" else "")
+            "score-row"
+                ++ (if battle.selectedScoreType == Just scoreType then
+                        " selected-score"
+
+                    else
+                        ""
+                   )
+                ++ (if not isAvailable then
+                        " used-score"
+
+                    else
+                        ""
+                   )
     in
     div
         [ class rowClass
-        , if isAvailable then onClick (SelectScore scoreType) else class ""
+        , if isAvailable then
+            onClick (SelectScore scoreType)
+
+          else
+            class ""
         ]
         [ div [ class "score-label" ]
             [ text label
@@ -182,7 +264,11 @@ viewScoreRow battle label value scoreType =
         , div [ class "score-value" ] [ text value ]
         ]
 
+
+
 -- バトルフッター（バトルログエリア）
+
+
 viewBattleFooter : List { message : String, timestamp : Time.Posix } -> Html Msg
 viewBattleFooter logEntries =
     div [ class "battle-footer" ]
@@ -193,7 +279,11 @@ viewBattleFooter logEntries =
             ]
         ]
 
+
+
 -- ログエントリー表示
+
+
 viewLogEntry : { message : String, timestamp : Time.Posix } -> Html Msg
 viewLogEntry logEntry =
     div [ class "log-entry" ] [ text logEntry.message ]

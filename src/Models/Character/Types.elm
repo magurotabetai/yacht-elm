@@ -7,7 +7,11 @@ module Models.Character.Types exposing
 
 import Models.Types exposing (ScoreType(..))
 
+
+
 -- Character entity - core domain model
+
+
 type alias Character =
     { id : String
     , name : String
@@ -20,7 +24,11 @@ type alias Character =
     , unlockCondition : Maybe UnlockCondition
     }
 
+
+
 -- Character special abilities - value object representing character powers
+
+
 type CharacterAbility
     = ExtraReroll -- 1回多くリロールができる
     | LuckyStart Int -- 指定された数字のダイスが1つ確定で出る
@@ -30,7 +38,11 @@ type CharacterAbility
     | TreasureHunter -- 宝箱からのアイテム数増加
     | MerchantDiscount Int -- 商人の値引き率
 
+
+
 -- Unlock condition for characters - value object
+
+
 type UnlockCondition
     = StarterCharacter -- 最初から使用可能
     | DefeatBoss String -- 特定のボスを倒す
@@ -38,7 +50,11 @@ type UnlockCondition
     | AchieveScore Int -- 特定のスコア到達
     | FindSecretItem String -- 特定のアイテムを発見
 
+
+
 -- Helper function to convert ability to human-readable text
+
+
 characterAbilityToString : CharacterAbility -> String
 characterAbilityToString ability =
     case ability of
@@ -63,20 +79,49 @@ characterAbilityToString ability =
         MerchantDiscount amount ->
             "値引き交渉：商人の価格が " ++ String.fromInt amount ++ "% 割引されます"
 
+
+
 -- Helper function to convert score type to string
+
+
 scoreTypeToString : ScoreType -> String
 scoreTypeToString scoreType =
     case scoreType of
-        Aces -> "エース（1の目）"
-        Twos -> "デュース（2の目）"
-        Threes -> "トリプル（3の目）"
-        Fours -> "フォー（4の目）"
-        Fives -> "フィフス（5の目）"
-        Sixes -> "シックス（6の目）"
-        Choice -> "チョイス"
-        FourOfKind -> "フォーカインド"
-        FullHouse -> "フルハウス"
-        SmallStraight -> "Sストレート"
-        LargeStraight -> "Lストレート"
-        Yacht -> "ヨット"
-        Special name -> name
+        Aces ->
+            "エース（1の目）"
+
+        Twos ->
+            "デュース（2の目）"
+
+        Threes ->
+            "トリプル（3の目）"
+
+        Fours ->
+            "フォー（4の目）"
+
+        Fives ->
+            "フィフス（5の目）"
+
+        Sixes ->
+            "シックス（6の目）"
+
+        Choice ->
+            "チョイス"
+
+        FourOfKind ->
+            "フォーカインド"
+
+        FullHouse ->
+            "フルハウス"
+
+        SmallStraight ->
+            "Sストレート"
+
+        LargeStraight ->
+            "Lストレート"
+
+        Yacht ->
+            "ヨット"
+
+        Special name ->
+            name

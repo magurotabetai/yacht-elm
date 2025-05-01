@@ -10,7 +10,11 @@ import Views.CharacterSelection
 import Views.MainMenu
 import Views.Map
 
+
+
 -- Router component that renders the appropriate view based on game phase
+
+
 view : GameState -> Html Msg
 view gameState =
     div [ class "game-container" ]
@@ -25,7 +29,7 @@ view gameState =
                 case gameState.currentRun of
                     Just run ->
                         Views.Map.viewMap gameState run
-                    
+
                     Nothing ->
                         div [ class "error" ] [ text "Run data missing" ]
 
@@ -35,11 +39,11 @@ view gameState =
                         case run.currentBattle of
                             Just battle ->
                                 Views.Battle.viewBattle gameState run battle
-                            
+
                             Nothing ->
                                 -- Fallback if battle data is missing
                                 div [ class "error" ] [ text "Battle data missing" ]
-                    
+
                     Nothing ->
                         -- Fallback if run data is missing
                         div [ class "error" ] [ text "Run data missing" ]

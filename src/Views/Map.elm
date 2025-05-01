@@ -1,14 +1,18 @@
 module Views.Map exposing (viewMap)
 
-import Html exposing (Html, div, h1, h2, p, text, button, span)
+import Html exposing (Html, button, div, h1, h2, p, span, text)
 import Html.Attributes exposing (class, style)
 import Html.Events exposing (onClick)
 import Models.Game exposing (GameState, Run)
-import Models.Map exposing (Node, getAvailableNodes, NodeType(..))
+import Models.Map exposing (Node, NodeType(..), getAvailableNodes)
 import Update.Messages exposing (Msg(..))
 import Views.Helpers exposing (viewButton)
 
+
+
 -- マップ画面全体
+
+
 viewMap : GameState -> Run -> Html Msg
 viewMap gameState run =
     div [ class "map-view" ]
@@ -17,7 +21,11 @@ viewMap gameState run =
             [ viewMapVisual run ]
         ]
 
+
+
 -- マップ上部のステータス表示
+
+
 viewMapStatus : Run -> Html Msg
 viewMapStatus run =
     div [ class "map-status" ]
@@ -29,7 +37,11 @@ viewMapStatus run =
             ]
         ]
 
+
+
 -- ステータス項目
+
+
 viewStatusItem : String -> String -> String -> Html Msg
 viewStatusItem label value valueClass =
     div [ class "status-item" ]
@@ -37,12 +49,19 @@ viewStatusItem label value valueClass =
         , div [ class ("status-value " ++ valueClass) ] [ text value ]
         ]
 
+
+
 -- マップの視覚表現
+
+
 viewMapVisual : Run -> Html Msg
 viewMapVisual run =
     let
-        currentFloorLevel = run.currentFloor
-        currentNodeId = run.map.currentPosition.nodeId
+        currentFloorLevel =
+            run.currentFloor
+
+        currentNodeId =
+            run.map.currentPosition.nodeId
 
         currentFloor =
             run.map.floors
@@ -50,14 +69,19 @@ viewMapVisual run =
                 |> List.head
                 |> Maybe.withDefault { level = 0, nodes = [], connections = [] }
 
-        availableNodes = getAvailableNodes run.map
+        availableNodes =
+            getAvailableNodes run.map
     in
     div [ class "map-visual" ]
         [ viewMapConnections currentFloor.connections currentFloor.nodes currentNodeId availableNodes
         , viewMapNodes currentFloor.nodes currentNodeId availableNodes
         ]
 
+
+
 -- マップのノード表示
+
+
 viewMapNodes : List Node -> String -> List Node -> Html Msg
 viewMapNodes nodes currentNodeId availableNodes =
     let
@@ -75,7 +99,11 @@ viewMapNodes nodes currentNodeId availableNodes =
             nodes
         )
 
+
+
 -- 個別のマップノード表示
+
+
 viewMapNode : Node -> Bool -> Bool -> Html Msg
 viewMapNode node isCurrent isAvailable =
     let
@@ -105,10 +133,13 @@ viewMapNode node isCurrent isAvailable =
         nodeStatusClass =
             if isCurrent then
                 " node-current"
+
             else if node.visited then
                 " node-visited"
+
             else if isAvailable then
                 " node-available"
+
             else
                 ""
 
@@ -166,6 +197,7 @@ viewMapNode node isCurrent isAvailable =
         clickEvent =
             if isAvailable then
                 onClick (MoveToNode node.id)
+
             else
                 onClick NoOp
     in
@@ -179,17 +211,22 @@ viewMapNode node isCurrent isAvailable =
         , div [ class "node-label" ] [ text nodeLabel ]
         ]
 
+
+
 -- マップのノード間接続線表示
+
+
 viewMapConnections : List { from : String, to : String } -> List Node -> String -> List Node -> Html Msg
 viewMapConnections connections nodes currentNodeId availableNodes =
     let
         isAvailablePath connection =
-            (connection.from == currentNodeId &&
-             List.any (\node -> node.id == connection.to) availableNodes)
+            connection.from
+                == currentNodeId
+                && List.any (\node -> node.id == connection.to) availableNodes
 
         isVisitedPath connection =
-            List.any (\node -> node.id == connection.from && node.visited) nodes &&
-            List.any (\node -> node.id == connection.to && node.visited) nodes
+            List.any (\node -> node.id == connection.from && node.visited) nodes
+                && List.any (\node -> node.id == connection.to && node.visited) nodes
 
         getNodePosition nodeId =
             nodes
@@ -202,20 +239,32 @@ viewMapConnections connections nodes currentNodeId availableNodes =
         (List.map
             (\connection ->
                 let
-                    fromPos = getNodePosition connection.from
-                    toPos = getNodePosition connection.to
+                    fromPos =
+                        getNodePosition connection.from
+
+                    toPos =
+                        getNodePosition connection.to
 
                     -- 線の角度と長さを計算
-                    dx = (toPos.x - fromPos.x) * 100
-                    dy = (toPos.y - fromPos.y) * 100
-                    length = sqrt (dx * dx + dy * dy)
-                    angle = atan2 dy dx
+                    dx =
+                        (toPos.x - fromPos.x) * 100
+
+                    dy =
+                        (toPos.y - fromPos.y) * 100
+
+                    length =
+                        sqrt (dx * dx + dy * dy)
+
+                    angle =
+                        atan2 dy dx
 
                     pathClass =
                         if isVisitedPath connection then
                             "path-traveled"
+
                         else if isAvailablePath connection then
                             "path-available"
+
                         else
                             "path-locked"
                 in

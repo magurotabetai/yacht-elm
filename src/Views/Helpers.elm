@@ -6,7 +6,10 @@ import Html.Events exposing (onClick)
 import Update.Messages exposing (Msg)
 
 
+
 -- 標準ボタン
+
+
 viewButton : String -> Msg -> Bool -> Html Msg
 viewButton label msg isDisabled =
     button
@@ -16,7 +19,11 @@ viewButton label msg isDisabled =
         ]
         [ text label ]
 
+
+
 -- アイコン付きボタン
+
+
 viewIconButton : String -> String -> Msg -> Bool -> Html Msg
 viewIconButton iconName label msg isDisabled =
     button
@@ -28,7 +35,11 @@ viewIconButton iconName label msg isDisabled =
         , text label
         ]
 
+
+
 -- カード形式のコンテナ
+
+
 viewCard : String -> List (Html Msg) -> Html Msg
 viewCard title content =
     div [ class "card" ]
@@ -36,7 +47,11 @@ viewCard title content =
         , div [ class "card-content" ] content
         ]
 
+
+
 -- セクションの区切り
+
+
 viewSection : String -> List (Html Msg) -> Html Msg
 viewSection title content =
     div [ class "section" ]
@@ -44,20 +59,33 @@ viewSection title content =
         , div [ class "section-content" ] content
         ]
 
+
+
 -- ボタンのスタイルクラス
+
+
 buttonClasses : Bool -> String
 buttonClasses isDisabled =
     if isDisabled then
         "btn btn-disabled"
+
     else
         "btn btn-primary"
 
+
+
 -- スペーサー
+
+
 spacer : Int -> Html Msg
 spacer size =
     div [ class ("spacer spacer-" ++ String.fromInt size) ] []
 
+
+
 -- 情報バッジ
+
+
 viewBadge : String -> String -> Html Msg
 viewBadge badgeType label =
     div [ class ("badge badge-" ++ badgeType) ]

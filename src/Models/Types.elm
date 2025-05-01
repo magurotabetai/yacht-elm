@@ -1,15 +1,19 @@
 module Models.Types exposing
-    ( GamePhase(..)
-    , ScoreType(..)
-    , ScoreHistory
+    ( DiceEffect(..)
     , DiceType(..)
-    , DiceEffect(..)
+    , GamePhase(..)
+    , ScoreHistory
+    , ScoreType(..)
     , initScoreHistory
     )
 
 import Time
 
+
+
 -- Game phases representing distinct application states
+
+
 type GamePhase
     = MainMenu
     | CharacterSelection
@@ -19,7 +23,11 @@ type GamePhase
     | GameOver
     | Victory
 
+
+
 -- Dice-related types - core value objects
+
+
 type DiceType
     = Normal
     | FireDice
@@ -28,6 +36,7 @@ type DiceType
     | CursedDice
     | RareDice
 
+
 type DiceEffect
     = NoEffect
     | DoubleFace
@@ -35,7 +44,11 @@ type DiceEffect
     | RerollOnce
     | AddBonus Int
 
+
+
 -- Score-related types
+
+
 type ScoreType
     = Aces
     | Twos
@@ -51,7 +64,11 @@ type ScoreType
     | Yacht
     | Special String
 
+
+
 -- Score tracking history (Value Object)
+
+
 type alias ScoreHistory =
     { aces : Bool
     , twos : Bool
@@ -68,7 +85,11 @@ type alias ScoreHistory =
     , specialScores : List String -- 使用済み特殊スコアのID
     }
 
+
+
 -- Initialize empty score history
+
+
 initScoreHistory : ScoreHistory
 initScoreHistory =
     { aces = False
@@ -86,7 +107,11 @@ initScoreHistory =
     , specialScores = []
     }
 
+
+
 -- アイテム関連の型定義
+
+
 type Rarity
     = Common
     | Uncommon
@@ -94,11 +119,13 @@ type Rarity
     | Epic
     | Legendary
 
+
 type ItemType
     = Passive
     | Active { cooldown : Int, currentCooldown : Int }
     | Consumable
     | DiceModifier
+
 
 type ItemEffect
     = ModifyDiceValue Int
@@ -107,7 +134,11 @@ type ItemEffect
     | AutoHoldValue Int
     | DamageBonus Int
 
+
+
 -- キャラクター関連の型定義
+
+
 type CharacterAbility
     = ExtraReroll -- 1回多くリロールができる
     | LuckyStart Int -- 指定された数字のダイスが1つ確定で出る
@@ -117,6 +148,7 @@ type CharacterAbility
     | TreasureHunter -- 宝箱からのアイテム数増加
     | MerchantDiscount Int -- 商人の値引き率
 
+
 type UnlockCondition
     = StarterCharacter -- 最初から使用可能
     | DefeatBoss String -- 特定のボスを倒す
@@ -124,7 +156,11 @@ type UnlockCondition
     | AchieveScore Int -- 特定のスコア到達
     | FindSecretItem String -- 特定のアイテムを発見
 
+
+
 -- マップ関連の型定義
+
+
 type NodeType
     = BattleNode EnemyData
     | EliteBattleNode EnemyData
@@ -134,7 +170,11 @@ type NodeType
     | EventNode EventType
     | BossNode BossData
 
+
+
 -- 敵の基本データ型
+
+
 type alias EnemyData =
     { id : String
     , name : String
@@ -145,34 +185,54 @@ type alias EnemyData =
     , rewards : List RewardData
     }
 
+
+
 -- ボスの基本データ型
+
+
 type alias BossData =
     { enemy : EnemyData
     , specialPhases : List BossPhase
     }
 
+
+
 -- 攻撃データ型
+
+
 type alias AttackData =
     { name : String
     , damage : Int
     , description : String
     }
 
+
+
 -- 報酬データ型
+
+
 type alias RewardData =
     { gold : Int
     , experience : Int
     , items : List String
     }
 
+
+
 -- ボスの特殊フェーズ
+
+
 type alias BossPhase =
     { hpThreshold : Int
     , description : String
     , effect : BossEffect
     }
 
+
+
 -- ボスの特殊効果
+
+
 type BossEffect
     = LockDice Int
     | DisableReroll
@@ -180,12 +240,14 @@ type BossEffect
     | HealSelf Int
     | SummonMinions
 
+
 type EventType
     = RandomReward
     | MysteryDice
     | HealthOrGold
     | UpgradeItem
     | SpecialEncounter String
+
 
 type ScoreBonus
     = BonusType ScoreType Int

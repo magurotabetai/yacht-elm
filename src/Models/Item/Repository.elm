@@ -1,10 +1,14 @@
-module Models.Item.Repository exposing (getItemById, getAllItems)
+module Models.Item.Repository exposing (getAllItems, getItemById)
 
+import Dict exposing (Dict)
 import Models.Item.Types exposing (..)
 import Models.Types exposing (ScoreType(..))
-import Dict exposing (Dict)
+
+
 
 -- Item repository - provides access to all game items
+
+
 itemDatabase : Dict String Item
 itemDatabase =
     Dict.fromList
@@ -47,24 +51,36 @@ itemDatabase =
             , description = "バトル開始時に1つのダイスの目が6で固定される"
             , rarity = Rare
             , itemType = Passive
-            , effects = [ AutoHoldValue 6 ] 
+            , effects = [ AutoHoldValue 6 ]
             , cost = 45
             , unlocked = False
             }
           )
         ]
 
+
+
 -- Get an item by its ID
+
+
 getItemById : String -> Maybe Item
 getItemById id =
     Dict.get id itemDatabase
 
+
+
 -- Get all items in the game
+
+
 getAllItems : List Item
 getAllItems =
     Dict.values itemDatabase
 
+
+
 -- Get starting items for a character by IDs
+
+
 getItemsByIds : List String -> List Item
 getItemsByIds ids =
     List.filterMap getItemById ids
