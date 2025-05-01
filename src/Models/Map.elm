@@ -132,8 +132,8 @@ createBasicEnemy : String -> String -> EnemyData
 createBasicEnemy id name =
     { id = id
     , name = name
-    , hp = 100
-    , maxHp = 100
+    , hp = 10
+    , maxHp = 10
     , attacks =
         [ { name = "通常攻撃", damage = 1, description = "弱い攻撃" }
         , { name = "威嚇", damage = 0, description = "何も起こらない" }
@@ -147,8 +147,8 @@ createEliteEnemy : String -> String -> EnemyData
 createEliteEnemy id name =
     { id = id
     , name = name ++ " (エリート)"
-    , hp = 200
-    , maxHp = 200
+    , hp = 20
+    , maxHp = 20
     , attacks =
         [ { name = "強打", damage = 2, description = "強い攻撃" }
         , { name = "連撃", damage = 1, description = "2回攻撃する" }
@@ -164,8 +164,8 @@ createBoss id name =
     { enemy =
         { id = id
         , name = name ++ " (ボス)"
-        , hp = 400
-        , maxHp = 400
+        , hp = 40
+        , maxHp = 40
         , attacks =
             [ { name = "激突", damage = 3, description = "強力な一撃" }
             , { name = "暴走", damage = 2, description = "連続攻撃" }
