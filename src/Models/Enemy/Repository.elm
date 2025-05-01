@@ -7,7 +7,7 @@ module Models.Enemy.Repository exposing
     )
 
 import Dict exposing (Dict)
-import Models.Enemy.Types exposing (..)
+import Models.Enemy.Types exposing (AttackPattern(..), Enemy, EnemyType(..))
 import Models.Types exposing (ScoreType(..))
 import Random
 
@@ -248,24 +248,5 @@ getRandomEnemy seed =
 
         selectedEnemy =
             List.drop index enemies |> List.head
-    in
-    ( selectedEnemy, newSeed )
-
-
-
--- Get a random normal enemy
-
-
-getRandomNormalEnemy : Random.Seed -> ( Maybe Enemy, Random.Seed )
-getRandomNormalEnemy seed =
-    let
-        normalEnemies =
-            getNormalEnemies
-
-        ( index, newSeed ) =
-            Random.step (Random.int 0 (List.length normalEnemies - 1)) seed
-
-        selectedEnemy =
-            List.drop index normalEnemies |> List.head
     in
     ( selectedEnemy, newSeed )

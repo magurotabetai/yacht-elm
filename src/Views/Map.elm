@@ -1,12 +1,11 @@
 module Views.Map exposing (viewMap)
 
-import Html exposing (Html, button, div, h1, h2, p, span, text)
+import Html exposing (Html, div, h2, text)
 import Html.Attributes exposing (class, style)
 import Html.Events exposing (onClick)
 import Models.Game exposing (GameState, Run)
 import Models.Map exposing (Node, NodeType(..), getAvailableNodes)
 import Update.Messages exposing (Msg(..))
-import Views.Helpers exposing (viewButton)
 
 
 

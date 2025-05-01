@@ -5982,9 +5982,7 @@ var $author$project$Models$Battle$Logic$applyEnemyAction = F3(
 				message: battle.enemyName + ('の攻撃！ ' + ($elm$core$String$fromInt(damage) + 'ダメージを受けた！')),
 				timestamp: currentTime
 			};
-			var updatedLog = {
-				entries: A2($elm$core$List$cons, logEntry, battle.log.entries)
-			};
+			var updatedLog = A2($elm$core$List$cons, logEntry, battle.log);
 			var updatedBattle = _Utils_update(
 				battle,
 				{
@@ -6751,9 +6749,7 @@ var $author$project$Models$Battle$Logic$confirmScore = F2(
 					message: $author$project$Models$Battle$Logic$scoreTypeToString(scoreType) + ('で' + ($elm$core$String$fromInt(scoreValue) + 'ダメージ！')),
 					timestamp: currentTime
 				};
-				var updatedLog = {
-					entries: A2($elm$core$List$cons, logEntry, battle.log.entries)
-				};
+				var updatedLog = A2($elm$core$List$cons, logEntry, battle.log);
 				var updatedBattle = _Utils_update(
 					battle,
 					{
@@ -7114,15 +7110,13 @@ var $author$project$Models$Battle$Types$initBattle = F8(
 			enemyMaxHP: enemyMaxHP,
 			enemyName: enemyName,
 			id: id,
-			log: {
-				entries: _List_fromArray(
-					[
-						{
-						message: enemyName + 'が現れた！',
-						timestamp: $elm$time$Time$millisToPosix(0)
-					}
-					])
-			},
+			log: _List_fromArray(
+				[
+					{
+					message: enemyName + 'が現れた！',
+					timestamp: $elm$time$Time$millisToPosix(0)
+				}
+				]),
 			maxRerolls: rerollCount,
 			playerCurrentHP: playerHP,
 			playerMaxHP: playerMaxHP,
@@ -7398,11 +7392,8 @@ var $author$project$Update$Update$update = F2(
 					{seed: seed});
 				return _Utils_Tuple2(newModel, $elm$core$Platform$Cmd$none);
 			case 'TickTime':
-				var newTime = msg.a;
 				return _Utils_Tuple2(model, $elm$core$Platform$Cmd$none);
 			case 'WindowResize':
-				var width = msg.a;
-				var height = msg.b;
 				return _Utils_Tuple2(model, $elm$core$Platform$Cmd$none);
 			case 'StartGame':
 				return _Utils_Tuple2(
@@ -8044,7 +8035,7 @@ var $author$project$Views$CharacterSelection$viewCharacterCard = function (chara
 					]))
 			]));
 };
-var $author$project$Views$CharacterSelection$view = function (gameState) {
+var $author$project$Views$CharacterSelection$view = function (_v0) {
 	return A2(
 		$elm$html$Html$div,
 		_List_fromArray(
@@ -8813,7 +8804,7 @@ var $author$project$Views$Battle$viewBattleRight = function (battle) {
 			]));
 };
 var $author$project$Views$Battle$viewBattle = F3(
-	function (gameState, run, battle) {
+	function (_v0, _v1, battle) {
 		return A2(
 			$elm$html$Html$div,
 			_List_fromArray(
@@ -8834,16 +8825,13 @@ var $author$project$Views$Battle$viewBattle = F3(
 							$author$project$Views$Battle$viewBattleLeft(battle),
 							$author$project$Views$Battle$viewBattleRight(battle)
 						])),
-					$author$project$Views$Battle$viewBattleFooter(battle.log.entries)
+					$author$project$Views$Battle$viewBattleFooter(battle.log)
 				]));
 	});
 var $author$project$Update$Messages$LoadGame = {$: 'LoadGame'};
 var $author$project$Update$Messages$OpenSettings = {$: 'OpenSettings'};
 var $author$project$Update$Messages$StartGame = {$: 'StartGame'};
-var $author$project$Views$MainMenu$hasExistingSave = function (gameState) {
-	return false;
-};
-var $author$project$Views$MainMenu$viewMainMenu = function (gameState) {
+var $author$project$Views$MainMenu$viewMainMenu = function (_v0) {
 	return A2(
 		$elm$html$Html$div,
 		_List_fromArray(
@@ -8886,11 +8874,7 @@ var $author$project$Views$MainMenu$viewMainMenu = function (gameState) {
 					[
 						A3($author$project$Views$Helpers$viewButton, '冒険を始める', $author$project$Update$Messages$StartGame, false),
 						$author$project$Views$Helpers$spacer(2),
-						A3(
-						$author$project$Views$Helpers$viewButton,
-						'続きから',
-						$author$project$Update$Messages$LoadGame,
-						!$author$project$Views$MainMenu$hasExistingSave(gameState)),
+						A3($author$project$Views$Helpers$viewButton, '続きから', $author$project$Update$Messages$LoadGame, false),
 						$author$project$Views$Helpers$spacer(2),
 						A3($author$project$Views$Helpers$viewButton, '設定', $author$project$Update$Messages$OpenSettings, false)
 					])),

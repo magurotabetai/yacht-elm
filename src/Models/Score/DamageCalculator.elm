@@ -6,7 +6,7 @@ module Models.Score.DamageCalculator exposing
     )
 
 import Models.Dice exposing (Dice)
-import Models.Score exposing (calculateScoreValue, sumAllDice, sumOfFace)
+import Models.Score exposing (calculateScoreValue)
 import Models.Types exposing (ScoreType(..))
 
 

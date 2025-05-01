@@ -7,12 +7,11 @@ module Main exposing (main)
 import Browser
 import Browser.Events exposing (onResize)
 import Html exposing (Html)
-import Html.Attributes exposing (class)
-import Models.Game as Game exposing (GameState)
+import Models.Game exposing (GameState)
 import Models.Types exposing (GamePhase(..))
 import Time
 import Update.Messages as Msg exposing (Msg)
-import Update.Update as Update exposing (init, update)
+import Update.Update exposing (init, update)
 import Views.Router as Router
 
 

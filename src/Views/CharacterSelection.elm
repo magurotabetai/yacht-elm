@@ -7,11 +7,11 @@ import Models.Character.Characters exposing (availableCharacters)
 import Models.Character.Types exposing (Character, characterAbilityToString)
 import Models.Game exposing (GameState)
 import Update.Messages exposing (Msg(..))
-import Views.Helpers exposing (spacer, viewButton, viewCard)
+import Views.Helpers exposing (spacer, viewButton)
 
 
 view : GameState -> Html Msg
-view gameState =
+view _ =
     div [ class "character-selection" ]
         [ h1 [] [ text "キャラクター選択" ]
         , p [ class "selection-info" ] [ text "冒険に出るキャラクターを選択してください" ]

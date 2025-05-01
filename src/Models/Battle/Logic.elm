@@ -10,7 +10,7 @@ module Models.Battle.Logic exposing
     , toggleHoldDice
     )
 
-import Models.Battle.Types exposing (..)
+import Models.Battle.Types exposing (Battle, BattleState(..))
 import Models.Dice as Dice
 import Models.Score as Score
 import Models.Types exposing (ScoreType)
@@ -159,7 +159,7 @@ confirmScore battle currentTime =
                         }
 
                     updatedLog =
-                        { entries = logEntry :: battle.log.entries }
+                        logEntry :: battle.log
 
                     -- Update battle state
                     updatedBattle =
@@ -217,7 +217,7 @@ applyEnemyAction battle damage currentTime =
                 }
 
             updatedLog =
-                { entries = logEntry :: battle.log.entries }
+                logEntry :: battle.log
 
             -- Update battle state
             updatedBattle =

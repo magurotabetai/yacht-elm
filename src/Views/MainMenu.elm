@@ -8,7 +8,7 @@ import Views.Helpers exposing (spacer, viewButton)
 
 
 viewMainMenu : GameState -> Html Msg
-viewMainMenu gameState =
+viewMainMenu _ =
     div [ class "main-menu" ]
         [ div [ class "game-title" ]
             [ h1 [] [ text "ヨットクエスト" ]
@@ -18,7 +18,7 @@ viewMainMenu gameState =
         , div [ class "menu-options" ]
             [ viewButton "冒険を始める" StartGame False
             , spacer 2
-            , viewButton "続きから" LoadGame (not (hasExistingSave gameState))
+            , viewButton "続きから" LoadGame False
             , spacer 2
             , viewButton "設定" OpenSettings False
             ]
@@ -26,16 +26,3 @@ viewMainMenu gameState =
             [ p [] [ text "Version 1.0.0" ]
             ]
         ]
-
-
-
--- セーブデータが存在するかどうかのチェック（仮実装）
-
-
-hasExistingSave : GameState -> Bool
-hasExistingSave gameState =
-    False
-
-
-
--- 実際にはローカルストレージの確認などを行う

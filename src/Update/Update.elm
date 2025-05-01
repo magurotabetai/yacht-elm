@@ -1,6 +1,5 @@
 module Update.Update exposing (init, update)
 
-import Browser
 import Models.Battle.Logic as BattleLogic
 import Models.Battle.Types exposing (BattleState(..))
 import Models.Character.Characters exposing (availableCharacters)
@@ -48,11 +47,11 @@ update msg model =
             in
             ( newModel, Cmd.none )
 
-        TickTime newTime ->
+        TickTime _ ->
             -- Update time in the model, could be used for animations, etc.
             ( model, Cmd.none )
 
-        WindowResize width height ->
+        WindowResize _ _ ->
             -- Handle window resize events
             ( model, Cmd.none )
 

@@ -6,7 +6,6 @@ module Models.Battle.Types exposing
     , initBattle
     )
 
-import Models.Character.Types exposing (Character)
 import Models.Dice exposing (Dice)
 import Models.Types exposing (ScoreHistory, ScoreType, initScoreHistory)
 import Time
@@ -48,12 +47,11 @@ type BattleState
 
 
 
--- Battle log - Records of battle events
+-- Battle log - Contains all log entries for the battle
 
 
 type alias BattleLog =
-    { entries : List LogEntry
-    }
+    List LogEntry
 
 
 
@@ -86,6 +84,6 @@ initBattle id enemyId enemyName enemyHP enemyMaxHP playerHP playerMaxHP rerollCo
     , scoreHistory = initScoreHistory
     , selectedScoreType = Nothing
     , state = Rolling
-    , log = { entries = [ { message = enemyName ++ "が現れた！", timestamp = Time.millisToPosix 0 } ] }
+    , log = [ { message = enemyName ++ "が現れた！", timestamp = Time.millisToPosix 0 } ]
     , timestamp = Time.millisToPosix 0
     }

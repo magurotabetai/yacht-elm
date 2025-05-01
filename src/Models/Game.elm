@@ -7,20 +7,15 @@ module Models.Game exposing
     , startNewRun
     )
 
-import Dict exposing (Dict)
 import Models.Battle.Logic as BattleLogic
 import Models.Battle.Types exposing (Battle, initBattle)
 import Models.Character.Characters exposing (availableCharacters)
 import Models.Character.Types exposing (Character)
 import Models.Dice exposing (standardDiceSet)
 import Models.Enemy.Repository as EnemyRepo
-import Models.Enemy.Types exposing (Enemy)
-import Models.Item.Repository as ItemRepo
-import Models.Item.Types exposing (Item)
 import Models.Map as Map exposing (Map)
 import Models.Types exposing (GamePhase(..))
 import Random
-import Time
 
 
 
@@ -129,10 +124,7 @@ type alias GameplaySettings =
 
 
 type Difficulty
-    = Easy
-    | Normal
-    | Hard
-    | Nightmare
+    = Normal
 
 
 
@@ -310,27 +302,3 @@ startBattle enemyId run seed =
         Nothing ->
             -- Enemy not found, return unchanged
             ( run, seed )
-
-
-
--- Find an item by ID from a list of inventory items
-
-
-getInventoryItem : String -> List String -> Maybe Item
-getInventoryItem itemId inventory =
-    if List.member itemId inventory then
-        ItemRepo.getItemById itemId
-
-    else
-        Nothing
-
-
-
--- Get character by ID
-
-
-getCharacterById : String -> Maybe Character
-getCharacterById id =
-    availableCharacters
-        |> List.filter (\c -> c.id == id)
-        |> List.head

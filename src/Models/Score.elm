@@ -13,9 +13,9 @@ module Models.Score exposing
     , sumOfFace
     )
 
-import Dict exposing (Dict)
+import Dict
 import Models.Dice exposing (Dice)
-import Models.Types exposing (ScoreHistory, ScoreType(..), initScoreHistory)
+import Models.Types exposing (ScoreHistory, ScoreType(..))
 
 
 

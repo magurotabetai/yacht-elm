@@ -1,7 +1,7 @@
 module Models.Item.Repository exposing (getAllItems, getItemById)
 
 import Dict exposing (Dict)
-import Models.Item.Types exposing (..)
+import Models.Item.Types exposing (Item, ItemRarity(..), ItemType(..))
 import Models.Types exposing (ScoreType(..))
 
 
@@ -75,12 +75,3 @@ getItemById id =
 getAllItems : List Item
 getAllItems =
     Dict.values itemDatabase
-
-
-
--- Get starting items for a character by IDs
-
-
-getItemsByIds : List String -> List Item
-getItemsByIds ids =
-    List.filterMap getItemById ids

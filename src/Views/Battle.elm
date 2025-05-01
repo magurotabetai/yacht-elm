@@ -1,6 +1,6 @@
 module Views.Battle exposing (viewBattle)
 
-import Html exposing (Html, button, div, h1, h2, h3, p, span, text)
+import Html exposing (Html, div, h2, h3, span, text)
 import Html.Attributes exposing (class, style)
 import Html.Events exposing (onClick)
 import Models.Battle.Types exposing (Battle, BattleState(..))
@@ -18,14 +18,14 @@ import Views.Helpers exposing (spacer, viewBadge, viewButton)
 
 
 viewBattle : GameState -> Run -> Battle -> Html Msg
-viewBattle gameState run battle =
+viewBattle _ _ battle =
     div [ class "battle-screen" ]
         [ viewBattleHeader battle
         , div [ class "battle-main" ]
             [ viewBattleLeft battle
             , viewBattleRight battle
             ]
-        , viewBattleFooter battle.log.entries
+        , viewBattleFooter battle.log
         ]
 
 
