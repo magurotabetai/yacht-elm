@@ -23,7 +23,7 @@
 依存関係をインストール:
 
 ```bash
-bun install
+npm install
 ```
 
 ## 開発方法
@@ -31,7 +31,7 @@ bun install
 開発サーバーを起動:
 
 ```bash
-bun dev
+npm run dev
 ```
 
 ## ビルド方法
@@ -39,13 +39,13 @@ bun dev
 プロダクション用にアプリをビルド:
 
 ```bash
-bun run build
+npm run build
 ```
 
 ビルドしたアプリをローカルでプレビュー:
 
 ```bash
-bun run preview
+npm run preview
 ```
 
 ## ゲームプレイ方法
