@@ -11,8 +11,9 @@ export default defineConfig({
             use: {
               loader: 'elm-webpack-loader',
               options: {
-                optimize: process.env.NODE_ENV === 'production',
+                // optimize: process.env.NODE_ENV === 'production',
                 // debug: process.env.NODE_ENV !== 'production',
+                optimize: false,
                 debug: true,
               },
             },
